@@ -34,18 +34,20 @@ button:disabled{opacity:.6;cursor:not-allowed}
     <div class="tab active" data-step="info">1. ข้อมูลโรงเรียน</div>
     <div class="tab" data-step="admin">2. บัญชีผู้ดูแล</div>
   </div>
+  
+  <!-- เอา required ออกเพื่อไม่ให้เบราว์เซอร์บล็อกช่องที่ซ่อนอยู่ -->
   <form id="signupForm" onsubmit="event.preventDefault(); doSignup();">
     <div class="step active" id="step-info">
-      <div class="field"><label>ชื่อโรงเรียน *</label><input type="text" id="schoolName" required placeholder="เช่น โรงเรียนบ้านสวน"></div>
-      <div class="field"><label>อีเมลผู้ติดต่อ *</label><input type="email" id="ownerEmail" required placeholder="owner@school.ac.th"></div>
+      <div class="field"><label>ชื่อโรงเรียน *</label><input type="text" id="schoolName" placeholder="เช่น โรงเรียนบ้านสวน"></div>
+      <div class="field"><label>อีเมลผู้ติดต่อ *</label><input type="email" id="ownerEmail" placeholder="owner@school.ac.th"></div>
       <div class="field"><label>เบอร์โทร (ไม่บังคับ)</label><input type="tel" id="ownerPhone" placeholder="0812345678"></div>
       <button type="button" onclick="nextStep('admin')">ถัดไป →</button>
     </div>
     <div class="step" id="step-admin">
-      <div class="field"><label>Username ผู้ดูแลระบบ *</label><input type="text" id="adminUsername" required value="admin" pattern="[a-z0-9_]+"></div>
-      <div class="field"><label>ชื่อ-นามสกุลผู้ดูแล *</label><input type="text" id="adminFullName" required placeholder="นายสมชาย ใจดี"></div>
-      <div class="field"><label>รหัสผ่าน (6 ตัวขึ้นไป) *</label><input type="password" id="adminPassword" required minlength="6"></div>
-      <div class="field"><label>ยืนยันรหัสผ่าน *</label><input type="password" id="adminPassword2" required minlength="6"></div>
+      <div class="field"><label>Username ผู้ดูแลระบบ *</label><input type="text" id="adminUsername" value="admin"></div>
+      <div class="field"><label>ชื่อ-นามสกุลผู้ดูแล *</label><input type="text" id="adminFullName" placeholder="นายสมชาย ใจดี"></div>
+      <div class="field"><label>รหัสผ่าน (6 ตัวขึ้นไป) *</label><input type="password" id="adminPassword"></div>
+      <div class="field"><label>ยืนยันรหัสผ่าน *</label><input type="password" id="adminPassword2"></div>
       <button type="submit" id="submitBtn">✨ สมัครใช้งาน (ทดลอง 14 วัน)</button>
       <div style="text-align:center;margin-top:12px;font-size:.85rem"><a href="#" onclick="nextStep('info');return false" style="color:#ff9a62">← ย้อนกลับ</a></div>
     </div>
@@ -54,7 +56,6 @@ button:disabled{opacity:.6;cursor:not-allowed}
 </div>
 
 <script>
-// ⚠️ ฝัง URL ตรงนี้เลย เพื่อไม่ให้ระบบหาไฟล์ config ไม่เจอ
 const MASTER_API_URL = 'https://script.google.com/macros/s/AKfycbxdKPEj6TyukUoOmSMqeFtms4dt6O7NBxeIfY7wuhnYE9qL-Gka9EGED52ePSJ3RlJmJA/exec';
 
 function nextStep(name) {
@@ -67,6 +68,7 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
 async function doSignup() {
   const btn = document.getElementById('submitBtn');
   
+  // ดึงข้อมูลทั้งหมด
   const schoolName = document.getElementById('schoolName').value.trim();
   const ownerEmail = document.getElementById('ownerEmail').value.trim();
   const ownerPhone = document.getElementById('ownerPhone').value.trim();
@@ -75,9 +77,11 @@ async function doSignup() {
   const pw = document.getElementById('adminPassword').value;
   const pw2 = document.getElementById('adminPassword2').value;
 
-  if (!schoolName || !ownerEmail || !adminUsername || !adminFullName) {
-    return alert('⚠️ กรุณากรอกข้อมูลให้ครบทุกช่องที่มีเครื่องหมาย *');
-  }
+  // ตรวจสอบข้อมูลเอง (ถ้าไม่ครบให้เด้ง Alert)
+  if (!schoolName) { nextStep('info'); return alert('⚠️ กรุณากรอกชื่อโรงเรียนในแท็บที่ 1'); }
+  if (!ownerEmail) { nextStep('info'); return alert('⚠️ กรุณากรอกอีเมลในแท็บที่ 1'); }
+  if (!adminUsername) return alert('⚠️ กรุณากรอก Username ผู้ดูแลระบบ');
+  if (!adminFullName) return alert('⚠️ กรุณากรอกชื่อ-นามสกุลผู้ดูแล');
   if (pw.length < 6) return alert('⚠️ รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
   if (pw !== pw2) return alert('⚠️ รหัสผ่านทั้งสองช่องไม่ตรงกัน');
 
@@ -111,7 +115,6 @@ async function doSignup() {
       return; 
     }
     
-    // สำเร็จ!
     const basePath = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
     const finalLoginUrl = location.origin + basePath + '?school=' + data.schoolId;
 
@@ -122,7 +125,7 @@ async function doSignup() {
       <a href="${finalLoginUrl}" style="display:block;margin-top:16px;text-align:center;padding:14px;background:#ff9a62;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;border:2px solid #3b3a4a;box-shadow:4px 4px 0 #3b3a4a">เข้าสู่ระบบ →</a>`;
   
   } catch (err) {
-    alert('❌ เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ: ' + err.message + '\n\nกรุณาตรวจสอบอินเทอร์เน็ต หรือแจ้งแอดมิน');
+    alert('❌ เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ: ' + err.message);
     btn.disabled = false; 
     btn.innerHTML = originalText;
   }
