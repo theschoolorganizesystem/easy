@@ -92,6 +92,7 @@ async function loadTenants() {
     <thead>
       <tr>
         <th>School ID / ชื่อโรงเรียน</th>
+        <th>แอดมินโรงเรียน (Username)</th>
         <th>Owner (อีเมล)</th>
         <th>สถานะ / วันหมดอายุ</th>
         <th>เหลือ</th>
@@ -105,6 +106,11 @@ async function loadTenants() {
             <div style="font-weight:bold; color:#60a5fa; font-family:monospace">${esc(t.schoolId)}</div>
             <div style="color:#cbd5e1; margin-top:2px">${esc(t.schoolName)}</div>
           </td>
+          <td>
+            <span style="background:#334155; padding:4px 8px; border-radius:4px; font-family:monospace; color:#fcd34d; font-weight:bold;">
+              ${esc(t.adminUser || 'admin')}
+            </span>
+          </td>
           <td>${esc(t.ownerEmail)}<br><span style="font-size:.75rem;color:#94a3b8">${esc(t.ownerPhone||'-')}</span></td>
           <td>
             <span class="badge ${t.status}">${t.status}</span><br>
@@ -116,7 +122,7 @@ async function loadTenants() {
           <td>
             <div class="action-btns">
               <button onclick="extendLicense('${t.schoolId}')" class="success" title="ต่ออายุ 30 วัน">+30 วัน</button>
-              <button onclick="resetAdminPassword('${t.schoolId}')" class="warning" title="รีเซ็ตรหัสแอดมิน">🔑 รีเซ็ตรหัส</button>
+              <button onclick="resetAdminPassword('${t.schoolId}', '${t.adminUser || 'admin'}')" class="warning" title="รีเซ็ตรหัสแอดมิน">🔑 รีเซ็ตรหัส</button>
               <button onclick="toggleStatus('${t.schoolId}','${t.status}')" class="danger" title="ระงับการใช้งาน">
                 ${t.status === 'suspended' ? '🔓 ปลดล็อค' : '🛑 ระงับ'}
               </button>
@@ -142,13 +148,14 @@ async function toggleStatus(schoolId, current) {
   alert(r.message); if (r.success) loadTenants();
 }
 
-async function resetAdminPassword(schoolId) {
-  const newPw = prompt(`กรอกรหัสผ่านใหม่สำหรับแอดมินโรงเรียน ${schoolId}\n(อย่างน้อย 6 ตัวอักษร)`, '123456789');
+async function resetAdminPassword(schoolId, adminUser) {
+  const newPw = prompt(`กรอกรหัสผ่านใหม่สำหรับแอดมินโรงเรียน ${schoolId}\n(Username: ${adminUser})\n(อย่างน้อย 6 ตัวอักษร)`, '123456789');
   if (!newPw) return;
   if (newPw.length < 6) return alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
   
   const r = await api('superadmin_resetAdminPassword', { schoolId, newPassword: newPw });
-  alert(r.message);
+  alert(r.message); 
+  if (r.success) loadTenants();
 }
 
 async function deleteTenant(schoolId, schoolName) {
