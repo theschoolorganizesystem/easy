@@ -88,11 +88,15 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const data = await r.json();
     if (!data.success) { alert('ผิดพลาด: ' + data.message); btn.disabled = false; btn.textContent = '✨ สมัครใช้งาน (ทดลอง 14 วัน)'; return; }
     
+    // สร้างลิงก์ที่ถูกต้องสำหรับ GitHub Pages (แก้ไขแล้ว)
+    const basePath = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+    const finalLoginUrl = location.origin + basePath + '?school=' + data.schoolId;
+
     document.querySelector('.card').innerHTML = `
       <h1>🎉 สมัครสำเร็จ!</h1>
       <p style="margin:16px 0;line-height:1.8">โรงเรียน <b>${data.schoolId}</b> ถูกสร้างเรียบร้อย<br>ระยะทดลองถึงวันที่ <b>${data.trialEnd}</b></p>
-      <p style="background:#f0ece1;padding:12px;border-radius:8px;font-size:.9rem;word-break:break-all">ลิงก์เข้าใช้งาน:<br><a href="${data.loginUrl}" style="color:#ff9a62">${location.origin}${location.pathname.replace('signup.html','')}${data.loginUrl}</a></p>
-      <a href="${data.loginUrl}" style="display:block;margin-top:16px;text-align:center;padding:14px;background:#ff9a62;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;border:2px solid #3b3a4a;box-shadow:4px 4px 0 #3b3a4a">เข้าสู่ระบบ →</a>`;
+      <p style="background:#f0ece1;padding:12px;border-radius:8px;font-size:.9rem;word-break:break-all">ลิงก์เข้าใช้งาน:<br><a href="${finalLoginUrl}" style="color:#ff9a62">${finalLoginUrl}</a></p>
+      <a href="${finalLoginUrl}" style="display:block;margin-top:16px;text-align:center;padding:14px;background:#ff9a62;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;border:2px solid #3b3a4a;box-shadow:4px 4px 0 #3b3a4a">เข้าสู่ระบบ →</a>`;
   } catch (err) {
     alert('เชื่อมต่อไม่สำเร็จ: ' + err.message); btn.disabled = false; btn.textContent = '✨ สมัครใช้งาน (ทดลอง 14 วัน)';
   }
