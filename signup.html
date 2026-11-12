@@ -34,7 +34,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
     <div class="tab active" data-step="info">1. ข้อมูลโรงเรียน</div>
     <div class="tab" data-step="admin">2. บัญชีผู้ดูแล</div>
   </div>
-  <form id="signupForm">
+  <form id="signupForm" onsubmit="event.preventDefault(); doSignup();">
     <div class="step active" id="step-info">
       <div class="field"><label>ชื่อโรงเรียน *</label><input type="text" id="schoolName" required placeholder="เช่น โรงเรียนบ้านสวน"></div>
       <div class="field"><label>อีเมลผู้ติดต่อ *</label><input type="email" id="ownerEmail" required placeholder="owner@school.ac.th"></div>
@@ -53,8 +53,10 @@ button:disabled{opacity:.6;cursor:not-allowed}
   <div class="trail">มีบัญชีแล้ว? <a href="#" id="loginLink">เข้าสู่ระบบ</a></div>
 </div>
 
-<script src="config.js"></script>
 <script>
+// ⚠️ ฝัง URL ตรงนี้เลย เพื่อไม่ให้ระบบหาไฟล์ config ไม่เจอ
+const MASTER_API_URL = 'https://script.google.com/macros/s/AKfycbxdKPEj6TyukUoOmSMqeFtms4dt6O7NBxeIfY7wuhnYE9qL-Gka9EGED52ePSJ3RlJmJA/exec';
+
 function nextStep(name) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   document.getElementById('step-' + name).classList.add('active');
@@ -62,33 +64,54 @@ function nextStep(name) {
 }
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => nextStep(t.dataset.step)));
 
-document.getElementById('signupForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
+async function doSignup() {
   const btn = document.getElementById('submitBtn');
+  
+  const schoolName = document.getElementById('schoolName').value.trim();
+  const ownerEmail = document.getElementById('ownerEmail').value.trim();
+  const ownerPhone = document.getElementById('ownerPhone').value.trim();
+  const adminUsername = document.getElementById('adminUsername').value.trim();
+  const adminFullName = document.getElementById('adminFullName').value.trim();
   const pw = document.getElementById('adminPassword').value;
   const pw2 = document.getElementById('adminPassword2').value;
-  if (pw !== pw2) return alert('รหัสผ่านไม่ตรงกัน');
 
-  btn.disabled = true; btn.textContent = 'กำลังสร้างโรงเรียน...';
+  if (!schoolName || !ownerEmail || !adminUsername || !adminFullName) {
+    return alert('⚠️ กรุณากรอกข้อมูลให้ครบทุกช่องที่มีเครื่องหมาย *');
+  }
+  if (pw.length < 6) return alert('⚠️ รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+  if (pw !== pw2) return alert('⚠️ รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+
+  const originalText = btn.innerHTML;
+  btn.disabled = true; 
+  btn.innerHTML = '⏳ กำลังสร้างโรงเรียน...';
+  
   try {
-    const r = await fetch(window.APP_CONFIG.MASTER_URL, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    const r = await fetch(MASTER_API_URL, {
+      method: 'POST', 
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         cmd: 'signupTenant',
-        schoolName: document.getElementById('schoolName').value.trim(),
-        ownerEmail: document.getElementById('ownerEmail').value.trim(),
-        ownerPhone: document.getElementById('ownerPhone').value.trim(),
-        adminUsername: document.getElementById('adminUsername').value.trim(),
-        adminFullName: document.getElementById('adminFullName').value.trim(),
+        schoolName: schoolName,
+        ownerEmail: ownerEmail,
+        ownerPhone: ownerPhone,
+        adminUsername: adminUsername,
+        adminFullName: adminFullName,
         adminPassword: pw,
         plan: 'trial',
         meta: { ua: navigator.userAgent }
       })
     });
-    const data = await r.json();
-    if (!data.success) { alert('ผิดพลาด: ' + data.message); btn.disabled = false; btn.textContent = '✨ สมัครใช้งาน (ทดลอง 14 วัน)'; return; }
     
-    // สร้างลิงก์ที่ถูกต้องสำหรับ GitHub Pages (แก้ไขแล้ว)
+    const data = await r.json();
+    
+    if (!data.success) { 
+      alert('❌ ผิดพลาดจากเซิร์ฟเวอร์: ' + data.message); 
+      btn.disabled = false; 
+      btn.innerHTML = originalText; 
+      return; 
+    }
+    
+    // สำเร็จ!
     const basePath = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
     const finalLoginUrl = location.origin + basePath + '?school=' + data.schoolId;
 
@@ -97,10 +120,14 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
       <p style="margin:16px 0;line-height:1.8">โรงเรียน <b>${data.schoolId}</b> ถูกสร้างเรียบร้อย<br>ระยะทดลองถึงวันที่ <b>${data.trialEnd}</b></p>
       <p style="background:#f0ece1;padding:12px;border-radius:8px;font-size:.9rem;word-break:break-all">ลิงก์เข้าใช้งาน:<br><a href="${finalLoginUrl}" style="color:#ff9a62">${finalLoginUrl}</a></p>
       <a href="${finalLoginUrl}" style="display:block;margin-top:16px;text-align:center;padding:14px;background:#ff9a62;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;border:2px solid #3b3a4a;box-shadow:4px 4px 0 #3b3a4a">เข้าสู่ระบบ →</a>`;
+  
   } catch (err) {
-    alert('เชื่อมต่อไม่สำเร็จ: ' + err.message); btn.disabled = false; btn.textContent = '✨ สมัครใช้งาน (ทดลอง 14 วัน)';
+    alert('❌ เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ: ' + err.message + '\n\nกรุณาตรวจสอบอินเทอร์เน็ต หรือแจ้งแอดมิน');
+    btn.disabled = false; 
+    btn.innerHTML = originalText;
   }
-});
+}
+
 document.getElementById('loginLink').addEventListener('click', (e) => {
   e.preventDefault();
   const schoolId = prompt('กรอก School ID:');
