@@ -1,1 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สมัครใช้งาน — TimeTrack Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Mali',sans-serif;background:#fdfbf7;color:#3b3a4a;background-image:radial-gradient(#f0ece1 2px,transparent 2px);background-size:24px 24px;min-height:100vh;padding:32px 16px;display:flex;justify-content:center;align-items:center}
+.card{background:#fff;border:2px solid #3b3a4a;border-radius:24px;padding:32px;max-width:520px;width:100%;box-shadow:4px 4px 0 #3b3a4a}
+h1{font-size:1.8rem;margin-bottom:8px;transform:rotate(-1deg);text-shadow:2px 2px 0 #fff,4px 4px 0 #ff9a62}
+.subtitle{color:#7a788c;margin-bottom:24px;font-size:.9rem}
+.field{margin-bottom:16px}
+label{display:block;font-size:.9rem;font-weight:600;margin-bottom:6px}
+input,select{width:100%;padding:12px 14px;border:2px solid #3b3a4a;border-radius:12px;font-family:inherit;font-size:.95rem;outline:none;background:#fdfbf7}
+input:focus{border-color:#ff9a62;box-shadow:0 0 0 3px rgba(255,154,98,.3)}
+button{width:100%;padding:14px;background:#ff9a62;color:#fff;border:2px solid #3b3a4a;border-radius:12px;font-family:inherit;font-size:1.05rem;font-weight:700;cursor:pointer;box-shadow:4px 4px 0 #3b3a4a;transition:all .15s}
+button:hover{background:#ff8642}button:active{transform:translate(4px,4px);box-shadow:none}
+button:disabled{opacity:.6;cursor:not-allowed}
+.tabs{display:flex;gap:8px;margin-bottom:20px;background:#f0ece1;padding:6px;border-radius:12px;border:2px solid #3b3a4a}
+.tab{flex:1;padding:10px;text-align:center;cursor:pointer;border-radius:8px;font-weight:600;font-size:.9rem;color:#7a788c}
+.tab.active{background:#fff;color:#3b3a4a;box-shadow:2px 2px 0 #3b3a4a}
+.step{display:none}.step.active{display:block}
+.trail{color:#7a788c;font-size:.8rem;margin-top:16px;text-align:center}
+.trail a{color:#ff9a62;text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🏫 สมัครใช้งาน</h1>
+  <div class="subtitle">TimeTrack Pro — ระบบลงเวลาทำงานสำหรับโรงเรียน</div>
+  <div class="tabs">
+    <div class="tab active" data-step="info">1. ข้อมูลโรงเรียน</div>
+    <div class="tab" data-step="admin">2. บัญชีผู้ดูแล</div>
+  </div>
+  <form id="signupForm">
+    <div class="step active" id="step-info">
+      <div class="field"><label>ชื่อโรงเรียน *</label><input type="text" id="schoolName" required placeholder="เช่น โรงเรียนบ้านสวน"></div>
+      <div class="field"><label>อีเมลผู้ติดต่อ *</label><input type="email" id="ownerEmail" required placeholder="owner@school.ac.th"></div>
+      <div class="field"><label>เบอร์โทร (ไม่บังคับ)</label><input type="tel" id="ownerPhone" placeholder="0812345678"></div>
+      <button type="button" onclick="nextStep('admin')">ถัดไป →</button>
+    </div>
+    <div class="step" id="step-admin">
+      <div class="field"><label>Username ผู้ดูแลระบบ *</label><input type="text" id="adminUsername" required value="admin" pattern="[a-z0-9_]+"></div>
+      <div class="field"><label>ชื่อ-นามสกุลผู้ดูแล *</label><input type="text" id="adminFullName" required placeholder="นายสมชาย ใจดี"></div>
+      <div class="field"><label>รหัสผ่าน (6 ตัวขึ้นไป) *</label><input type="password" id="adminPassword" required minlength="6"></div>
+      <div class="field"><label>ยืนยันรหัสผ่าน *</label><input type="password" id="adminPassword2" required minlength="6"></div>
+      <button type="submit" id="submitBtn">✨ สมัครใช้งาน (ทดลอง 14 วัน)</button>
+      <div style="text-align:center;margin-top:12px;font-size:.85rem"><a href="#" onclick="nextStep('info');return false" style="color:#ff9a62">← ย้อนกลับ</a></div>
+    </div>
+  </form>
+  <div class="trail">มีบัญชีแล้ว? <a href="#" id="loginLink">เข้าสู่ระบบ</a></div>
+</div>
 
+<script src="config.js"></script>
+<script>
+function nextStep(name) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.step === name));
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => nextStep(t.dataset.step)));
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const pw = document.getElementById('adminPassword').value;
+  const pw2 = document.getElementById('adminPassword2').value;
+  if (pw !== pw2) return alert('รหัสผ่านไม่ตรงกัน');
+
+  btn.disabled = true; btn.textContent = 'กำลังสร้างโรงเรียน...';
+  try {
+    const r = await fetch(window.APP_CONFIG.MASTER_URL, {
+      method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        cmd: 'signupTenant',
+        schoolName: document.getElementById('schoolName').value.trim(),
+        ownerEmail: document.getElementById('ownerEmail').value.trim(),
+        ownerPhone: document.getElementById('ownerPhone').value.trim(),
+        adminUsername: document.getElementById('adminUsername').value.trim(),
+        adminFullName: document.getElementById('adminFullName').value.trim(),
+        adminPassword: pw,
+        plan: 'trial',
+        meta: { ua: navigator.userAgent }
+      })
+    });
+    const data = await r.json();
+    if (!data.success) { alert('ผิดพลาด: ' + data.message); btn.disabled = false; btn.textContent = '✨ สมัครใช้งาน (ทดลอง 14 วัน)'; return; }
+    
+    document.querySelector('.card').innerHTML = `
+      <h1>🎉 สมัครสำเร็จ!</h1>
+      <p style="margin:16px 0;line-height:1.8">โรงเรียน <b>${data.schoolId}</b> ถูกสร้างเรียบร้อย<br>ระยะทดลองถึงวันที่ <b>${data.trialEnd}</b></p>
+      <p style="background:#f0ece1;padding:12px;border-radius:8px;font-size:.9rem;word-break:break-all">ลิงก์เข้าใช้งาน:<br><a href="${data.loginUrl}" style="color:#ff9a62">${location.origin}${location.pathname.replace('signup.html','')}${data.loginUrl}</a></p>
+      <a href="${data.loginUrl}" style="display:block;margin-top:16px;text-align:center;padding:14px;background:#ff9a62;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;border:2px solid #3b3a4a;box-shadow:4px 4px 0 #3b3a4a">เข้าสู่ระบบ →</a>`;
+  } catch (err) {
+    alert('เชื่อมต่อไม่สำเร็จ: ' + err.message); btn.disabled = false; btn.textContent = '✨ สมัครใช้งาน (ทดลอง 14 วัน)';
+  }
+});
+document.getElementById('loginLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  const schoolId = prompt('กรอก School ID:');
+  if (schoolId) location.href = './?school=' + encodeURIComponent(schoolId.trim());
+});
+</script>
+</body>
+</html>
