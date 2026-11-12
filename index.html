@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>TimeTrack Pro — ระบบลงเวลาทำงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Flatpickr for Date Picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root {
+  --bg-color: #fdfbf7; --bg-pattern: #f0ece1; --text-main: #3b3a4a; --text-muted: #7a788c;
+  --primary: #ff9a62; --primary-hover: #ff8642; --secondary: #6cd4ff; --accent: #b983ff;
+  --success: #6ddf9a; --danger: #ff7b93; --warning: #ffd166; --border-color: #3b3a4a;
+  --card-bg: #ffffff; --nav-bg: #ffffff; --border-width: 2px;
+  --radius-xl: 24px; --radius-lg: 16px; --radius-md: 12px; --nav-height: 75px;
+  --shadow-hard: 4px 4px 0px var(--border-color);
+  --glow-primary: 0 0 12px rgba(255, 154, 98, 0.6);
+}
+body[data-theme="newyear"] { --bg-color: #0f172a; --bg-pattern: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; --primary: #fbbf24; --primary-hover: #f59e0b; --secondary: #38bdf8; --accent: #f472b6; --border-color: #020617; --card-bg: #1e293b; --nav-bg: #0f172a; --glow-primary: 0 0 15px rgba(251, 191, 36, 0.6); }
+body[data-theme="valentine"] { --bg-color: #fff1f2; --bg-pattern: #ffe4e6; --text-main: #4c0519; --text-muted: #be123c; --primary: #f43f5e; --primary-hover: #e11d48; --secondary: #fda4af; --accent: #fb7185; --border-color: #881337; --card-bg: #ffffff; --nav-bg: #fff1f2; --glow-primary: 0 0 15px rgba(244, 63, 94, 0.5); }
+body[data-theme="songkran"] { --bg-color: #f0f9ff; --bg-pattern: #e0f2fe; --text-main: #082f49; --text-muted: #0369a1; --primary: #0ea5e9; --primary-hover: #0284c7; --secondary: #2dd4bf; --accent: #fbbf24; --border-color: #0c4a6e; --card-bg: #ffffff; --nav-bg: #f0f9ff; --glow-primary: 0 0 15px rgba(14, 165, 233, 0.5); }
+body[data-theme="halloween"] { --bg-color: #170a25; --bg-pattern: #2e1065; --text-main: #f8fafc; --text-muted: #cbd5e1; --primary: #ea580c; --primary-hover: #c2410c; --secondary: #9333ea; --accent: #fde047; --border-color: #000000; --card-bg: #2e1065; --nav-bg: #170a25; --glow-primary: 0 0 20px rgba(234, 88, 12, 0.7); }
+body[data-theme="loykrathong"] { --bg-color: #1e1b4b; --bg-pattern: #312e81; --text-main: #e0e7ff; --text-muted: #a5b4fc; --primary: #f59e0b; --primary-hover: #d97706; --secondary: #ec4899; --accent: #8b5cf6; --border-color: #0f172a; --card-bg: #312e81; --nav-bg: #1e1b4b; --glow-primary: 0 0 15px rgba(245, 158, 11, 0.6); }
+body[data-theme="christmas"] { --bg-color: #f8fafc; --bg-pattern: #e2e8f0; --text-main: #0f172a; --text-muted: #475569; --primary: #dc2626; --primary-hover: #b91c1c; --secondary: #16a34a; --accent: #eab308; --border-color: #0f172a; --card-bg: #ffffff; --nav-bg: #f8fafc; --glow-primary: 0 0 15px rgba(220, 38, 38, 0.5); }
+
+body{ font-family:'Mali', 'Prompt', sans-serif; background-color:var(--bg-color); background-image: radial-gradient(var(--bg-pattern) 2px, transparent 2px); background-size: 24px 24px; color:var(--text-main); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px 16px calc(var(--nav-height) + 30px) 16px; position:relative; overflow-x:hidden; transition: background-color 0.5s ease, color 0.5s ease; }
+.wrapper{position:relative;z-index:10;width:100%;max-width:620px;display:flex;flex-direction:column;gap:20px}
+.screen{display:none;flex-direction:column;gap:20px;width:100%;animation:popIn .4s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+.screen.active{display:flex}
+@keyframes popIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+#holiday-decorations { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.floating-emoji { position: absolute; font-size: 2rem; opacity: 0.6; animation: floatUp 12s linear infinite; bottom: -50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+@keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.8; } 90% { opacity: 0.8; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
+
+.brand{text-align:center;padding:10px 0 0}
+.brand-title{ font-size:clamp(2.2rem,6vw,2.8rem); font-weight:700; color:var(--text-main); text-shadow: 2px 2px 0px var(--bg-color), 4px 4px 0px var(--primary); letter-spacing:-.02em; transform: rotate(-2deg); animation: titleBounce 3s ease-in-out infinite; }
+@keyframes titleBounce { 0%, 100% { transform: rotate(-2deg) translateY(0); } 50% { transform: rotate(-2deg) translateY(-5px); } }
+
+.card{ background:var(--card-bg); border:var(--border-width) solid var(--border-color); border-radius:var(--radius-xl); padding:24px 22px; box-shadow:var(--shadow-hard); position:relative; transition: transform .2s, box-shadow .2s; }
+.card::after { content:''; position:absolute; inset:4px; border-radius:20px; border:1px dashed rgba(128,128,128,0.3); pointer-events:none; }
+.card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--border-color); }
+
+.app-header{ display:flex; align-items:center; gap:12px; background:var(--card-bg); border:var(--border-width) solid var(--border-color); border-radius:var(--radius-lg); padding:12px 16px; box-shadow:var(--shadow-hard); }
+.user-info{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+.user-info.vertical { flex-direction: column; text-align: center; gap: 6px; }
+
+.avatar{ border-radius:50%; width:46px; height:46px; object-fit:cover; border:var(--border-width) solid var(--border-color); background:#eee; box-shadow: var(--shadow-hard), var(--glow-primary); transition: transform 0.2s; }
+.avatar:hover { transform: scale(1.1) rotate(10deg); }
+.avatar-lg{ width:64px; height:64px; border-radius:50%; object-fit:cover; border:var(--border-width) solid var(--border-color); background:#eee; box-shadow: var(--shadow-hard), var(--glow-primary); }
+
+.avatar-xs { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); background: var(--bg-pattern); box-shadow: var(--glow-primary); margin-right: 8px; display: inline-block; vertical-align: middle; flex-shrink: 0; transition: transform 0.2s; }
+.avatar-xs:hover { transform: scale(1.2) rotate(5deg); }
+
+.user-name{font-weight:700;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:.8rem;color:var(--text-muted);margin-top:2px}
+
+.icon-btn{ width:40px;height:40px; display:flex;align-items:center;justify-content:center; background:var(--card-bg); border:var(--border-width) solid var(--border-color); border-radius:12px; color:var(--text-main); cursor:pointer; font-size:1.1rem; box-shadow: 2px 2px 0px var(--border-color); transition: all .1s; position:relative; }
+.icon-btn:hover{ background:var(--bg-pattern); transform: scale(1.05); }
+.icon-btn:active{ transform:translate(2px, 2px); box-shadow: 0px 0px 0px var(--border-color); }
+
+.btn-back {
+  background: var(--primary);
+  color: #fff;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .1s;
+}
+.btn-back:hover {
+  background: var(--primary-hover);
+  transform: scale(1.02);
+}
+.btn-back:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--border-color);
+}
+
+.tabs{ display:flex; gap:8px; background:var(--bg-pattern); padding:6px; border-radius:var(--radius-lg); border:var(--border-width) solid var(--border-color); overflow-x:auto; }
+.tab{ flex:1; padding:10px 12px; border:var(--border-width) solid transparent; background:transparent; color:var(--text-muted); font-family:inherit; font-size:.9rem; font-weight:600; cursor:pointer; border-radius:12px; transition:all .2s; white-space:nowrap; }
+.tab.active{ background:var(--card-bg); color:var(--text-main); border-color:var(--border-color); box-shadow: 2px 2px 0px var(--border-color); transform: scale(1.02); }
+.tab-content{display:none}
+.tab-content.active{display:block; animation: fadeIn 0.3s ease;}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.field{margin-bottom:16px}
+.field-label{display:flex;align-items:center;gap:6px;font-size:.9rem;font-weight:600;color:var(--text-main);margin-bottom:8px}
+.req{color:var(--danger);font-size:1rem; animation: pulse 1s infinite;}
+.input,.textarea,.select{ width:100%; background:var(--bg-color); border:var(--border-width) solid var(--border-color); border-radius:var(--radius-md); padding:12px 14px; color:var(--text-main); font-family:inherit; font-size:.95rem; outline:none; transition:all .2s; box-shadow: inset 2px 2px 0px rgba(0,0,0,0.05); }
+.input:focus,.textarea:focus,.select:focus{ background:var(--card-bg); box-shadow: 4px 4px 0px var(--primary), var(--glow-primary); border-color:var(--border-color); transform: translate(-2px, -2px); }
+.input::placeholder,.textarea::placeholder{color:var(--text-muted); opacity: 0.6;}
+.checkbox-group{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--text-main);cursor:pointer;font-weight:500}
+input[type="checkbox"]{width:20px;height:20px;cursor:pointer;accent-color:var(--primary); border:2px solid var(--border-color); border-radius: 4px;}
+
+.action-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:8px}
+.action-btn{ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px; padding:16px 8px; border-radius:var(--radius-lg); border:var(--border-width) solid var(--border-color); background:var(--card-bg); color:var(--text-main); font-family:inherit; font-size:.9rem; font-weight:700; cursor:pointer; transition:all .1s; position:relative; box-shadow: 4px 4px 0px var(--border-color); }
+.action-btn .icon{font-size:2rem;line-height:1; transition: transform .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+.action-btn:hover:not(:disabled) .icon{ transform: scale(1.2) rotate(10deg); }
+.action-btn:active:not(:disabled){ transform:translate(4px, 4px); box-shadow: 0px 0px 0px var(--border-color); }
+.action-btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(1);background:var(--bg-pattern); transform:none; box-shadow:none; border-style: dashed;}
+.action-btn[data-action="เข้างาน"].active{ background:#e6fbf0; border-color:var(--success); box-shadow: inset 0 0 0 2px var(--success); color:#008040;}
+.action-btn[data-action="ออกงาน"].active{ background:#ffe6eb; border-color:var(--danger); box-shadow: inset 0 0 0 2px var(--danger); color:#cc0033;}
+.action-btn[data-action="ลา"].active{ background:#fff3d6; border-color:var(--warning); box-shadow: inset 0 0 0 2px var(--warning); color:#d97706;}
+.action-btn[data-action="ไปราชการ"].active{ background:#e6f7ff; border-color:var(--secondary); box-shadow: inset 0 0 0 2px var(--secondary); color:#0088cc;}
+
+.submit-btn{ width:100%; padding:16px; border:var(--border-width) solid var(--border-color); border-radius:var(--radius-lg); font-family:inherit; font-size:1.1rem; font-weight:700; cursor:pointer; color:#fff; background:var(--primary); box-shadow: 4px 4px 0px var(--border-color); transition:all .1s ease; display:flex; justify-content:center; align-items:center; gap:8px; text-shadow: 1px 1px 0px rgba(0,0,0,0.2); }
+.submit-btn:hover:not(:disabled){ background:var(--primary-hover); transform: scale(1.02); box-shadow: 4px 4px 0px var(--border-color), var(--glow-primary); }
+.submit-btn:active:not(:disabled){ transform:translate(4px, 4px); box-shadow: 0px 0px 0px var(--border-color); }
+.submit-btn:disabled{opacity:.6;cursor:not-allowed;filter:grayscale(0.5);}
+
+.btn-sm{ padding:8px 14px; border-radius:12px; border:var(--border-width) solid var(--border-color); font-family:inherit; font-size:.85rem; font-weight:700; cursor:pointer; transition:all .1s; display:inline-flex; align-items:center; justify-content:center; gap:6px; box-shadow: 2px 2px 0px var(--border-color); background:var(--card-bg); color:var(--text-main); }
+.btn-sm:active{ transform:translate(2px, 2px); box-shadow: 0px 0px 0px var(--border-color); }
+.btn-cyan{background:#e6f7ff; color:#0088cc;}
+.btn-emerald{background:#e6fbf0; color:#00a854;}
+.btn-danger{background:#ffe6eb; color:#cc0033;}
+.btn-neutral{background:var(--bg-pattern); color:var(--text-main);}
+.btn-warning{background:#fff3d6; color:#d97706;}
+
+.table-wrap{ overflow-x:auto; border-radius:16px; border:var(--border-width) solid var(--border-color); margin-top:12px; background:var(--card-bg); box-shadow: 4px 4px 0px rgba(0,0,0,0.05); }
+#reportsTableWrap { max-height: 60vh; overflow-y: auto; scroll-behavior: smooth; }
+
+table{width:100%;border-collapse:collapse;font-size:.85rem;text-align:left}
+th{background:var(--bg-pattern);padding:12px 10px;font-weight:700;color:var(--text-main);white-space:nowrap;border-bottom:var(--border-width) solid var(--border-color); text-align: center;}
+#reportsTableWrap thead th { position: sticky; top: 0; z-index: 2; }
+td{padding:12px 10px;border-bottom:1px solid var(--border-color);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td { background: var(--bg-color); }
+.table-name{font-weight:700;color:var(--text-main); display: flex; align-items: center; gap: 4px;}
+
+.row-latest-day { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+tr.row-latest-day:hover td { background: color-mix(in srgb, var(--primary) 14%, transparent); }
+
+.skeleton-row td{position: relative;overflow: hidden;background-color: var(--bg-pattern);color: transparent !important; border-bottom: none;}
+.skeleton-row td::after{content: "";position: absolute;top: 0;left: 0;right: 0;bottom: 0;background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);transform: translateX(-100%);animation: shimmer 1.5s infinite;}
+@keyframes shimmer{100% { transform: translateX(100%); }}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px; opacity: 0; transition: opacity 0.3s;}
+.modal-overlay.show{display:flex; opacity: 1;}
+.modal{background:var(--card-bg);border:var(--border-width) solid var(--border-color);border-radius:24px;padding:24px;max-width:480px;width:100%;box-shadow:8px 8px 0px var(--border-color); max-height:90vh; overflow-y:auto; transform: translateY(30px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+.modal-overlay.show .modal{ transform: translateY(0);}
+
+.toast{ position:fixed;bottom:calc(var(--nav-height) + 20px);left:50%; transform:translate(-50%, 150%); z-index:199;padding:14px 24px;border-radius:16px; background:var(--card-bg); border:var(--border-width) solid var(--border-color); font-size:.95rem;font-weight:700; transition:all .4s cubic-bezier(.34,1.56,.64,1); max-width:calc(100vw - 40px);display:flex;align-items:center;gap:10px; box-shadow: 6px 6px 0px var(--border-color); opacity: 0; visibility: hidden; pointer-events: none; }
+.toast.show{transform:translate(-50%, 0); opacity: 1; visibility: visible; pointer-events: auto;}
+.toast.success{color:var(--text-main); border-color:var(--success); box-shadow: 6px 6px 0px var(--success);}
+.toast.error{color:var(--text-main); border-color:var(--danger); box-shadow: 6px 6px 0px var(--danger);}
+
+.bottom-nav{ position:fixed;bottom:0;left:0;right:0;height:var(--nav-height); background:var(--nav-bg); border-top:var(--border-width) solid var(--border-color); display:none;justify-content:space-around;align-items:center;z-index:90;padding:0 10px; box-shadow: 0 -4px 0px rgba(0,0,0,0.05); }
+.bottom-nav.show{display:flex}
+.nav-item{ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px; color:var(--text-muted);font-size:.75rem;font-weight:700;cursor:pointer; transition:all .2s; border-radius:16px; border:2px solid transparent; height: 60px; width: 80px; }
+.nav-item:hover { background: var(--bg-color); }
+.nav-item.active{color:var(--text-main);background:var(--bg-pattern); border-color:var(--border-color); box-shadow: 2px 2px 0px var(--border-color);}
+.nav-icon{font-size:1.4rem; transition: transform 0.2s;}
+.nav-item.active .nav-icon { transform: translateY(-3px) scale(1.1); }
+
+.section-title{font-size:1.05rem;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.empty-state{text-align:center;padding:30px 12px;color:var(--text-muted);font-size:.9rem;border:2px dashed var(--border-color);border-radius:16px; background:var(--bg-color); font-weight:500;}
+.reason-section{max-height:0;overflow:hidden;opacity:0;transition:all .4s;margin-bottom:0}
+.reason-section.visible{max-height:800px;opacity:1;margin-bottom:16px}
+.gps-status{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;font-size:.88rem;font-weight:600;background:var(--bg-pattern);border:2px dashed var(--border-color);margin-bottom:16px;color:var(--text-muted);transition:all .3s;}
+.gps-status.ok{background:#e6fbf0;border-style:solid;border-color:var(--success);color:#008040;}
+.gps-status.bad{background:#ffe6eb;border-style:solid;border-color:var(--danger);color:#cc0033;}
+.gps-status.loading{background:#e6f7ff;border-style:solid;border-color:var(--secondary);color:#0088cc;}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(0,0,0,.15);border-top-color:var(--text-main);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.live-indicator{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;color:var(--success);font-weight:700}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.2)}}
+.badge-noti{position: absolute;top: -8px;right: -8px;background: var(--danger);color: #fff;border-radius: 50%;padding: 2px 6px;font-size: 10px;font-weight: bold;border: 2px solid #fff;display: none; animation: titleBounce 2s infinite;}
+.cache-indicator{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;color:var(--text-muted);font-weight:600;padding:2px 6px;background:var(--bg-pattern);border-radius:6px;border:1px solid var(--border-color);}
+@media (max-width: 480px) {.form-row-3 { grid-template-columns: 1fr; }}
+
+.user-row{display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--bg-color);border-radius:14px;gap:10px;border:2px solid var(--border-color); margin-bottom:10px; box-shadow: 2px 2px 0 var(--border-color); transition: transform 0.2s;}
+.user-row:hover { transform: translateX(4px); }
+.user-row-info{flex:1;min-width:0; display:flex; align-items:center; gap:10px;}
+
+.reports-action-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.reports-action-bar .left { display:flex; gap:8px; align-items:center; }
+.reports-action-bar .right { display:flex; gap:8px; align-items:center; }
+
+.latest-day-label { display: inline-block; font-size: 0.65rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
+
+/* Flatpickr Custom Overrides */
+.flatpickr-calendar { font-family: 'Mali', sans-serif !important; border: 2px solid var(--border-color) !important; box-shadow: 4px 4px 0 var(--border-color) !important; border-radius: 12px !important; }
+.flatpickr-day.selected { background: var(--primary) !important; border-color: var(--primary) !important; }
+.datepicker-wrap { position: relative; display: inline-block; }
+
+.cell-name-mobile { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.cell-name-mobile .avatar-xs { margin-right: 0; width: 30px; height: 30px; }
+.cell-name-mobile .cell-label { font-size: 0.72rem; font-weight: 700; line-height: 1.2; word-break: break-word; max-width: 60px; }
+
+@media (max-width: 600px) {
+  .card { padding: 14px 10px; }
+  table { font-size: 0.72rem; }
+  th { padding: 7px 4px; font-size: 0.72rem; white-space: nowrap; }
+  td { padding: 7px 4px; }
+  td:nth-child(2), td:nth-child(3), th:nth-child(2), th:nth-child(3) { white-space: nowrap; min-width: 44px; }
+  td:last-child { word-break: break-word; max-width: 80px; }
+  #reportsTableWrap { max-height: 55vh; }
+  .cell-name-mobile { display: flex; }
+  .latest-day-label { display: none; }
+  .form-row-3 { grid-template-columns: 1fr 1fr; }
+  .form-row-3 > *:last-child { grid-column: 1 / -1; }
+}
+</style>
+</head>
+<body>
+
+<div id="holiday-decorations"></div>
+
+<div class="wrapper">
+
+  <!-- AUTH SCREEN -->
+  <div id="authScreen" class="screen active">
+    <header class="brand"><h1 class="brand-title">ลงเวลาทำงาน</h1></header>
+    <div class="card">
+      <div class="tabs" style="margin-bottom:20px">
+        <button class="tab active" data-tab="login">เข้าสู่ระบบ</button>
+        <button class="tab" data-tab="register">ลงทะเบียน</button>
+      </div>
+      <form id="loginForm" class="tab-content active">
+        <div class="field"><label class="field-label">ชื่อผู้ใช้ <span class="req">*</span></label><input type="text" id="loginUsername" class="input" required></div>
+        <div class="field"><label class="field-label">รหัสผ่าน <span class="req">*</span></label><input type="password" id="loginPassword" class="input" required></div>
+        <div class="field"><label class="checkbox-group"><input type="checkbox" id="rememberMe" checked> จดจำการเข้าสู่ระบบ (30 วัน)</label></div>
+        <button type="submit" class="submit-btn" id="loginBtn">🚀 เข้าสู่ระบบ</button>
+      </form>
+      <form id="registerForm" class="tab-content">
+        <div class="field"><label class="field-label">ชื่อผู้ใช้ <span class="req">*</span></label><input type="text" id="regUsername" class="input" placeholder="a-z, 0-9, _" required></div>
+        <div class="field"><label class="field-label">ชื่อ-นามสกุล <span class="req">*</span></label><input type="text" id="regFullName" class="input" required></div>
+        <div class="field"><label class="field-label">อีเมล</label><input type="email" id="regEmail" class="input"></div>
+        <div class="field"><label class="field-label">รหัสผ่าน <span class="req">*</span></label><input type="password" id="regPassword" class="input" required></div>
+        <div class="field"><label class="field-label">ยืนยันรหัสผ่าน <span class="req">*</span></label><input type="password" id="regPassword2" class="input" required></div>
+        <div class="gps-status" id="regGpsStatus"><span>📍</span><span>ระบบจะขอตำแหน่ง GPS ขณะลงทะเบียน</span></div>
+        <button type="submit" class="submit-btn" id="registerBtn">✨ ลงทะเบียน</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboardScreen" class="screen">
+    <header class="app-header">
+      <div class="user-info vertical">
+        <img id="dashPic" class="avatar-lg" src="" alt="profile">
+        <div class="user-name" id="dashName">—</div>
+        <div class="user-role" id="dashRole">—</div>
+      </div>
+      <button class="icon-btn" id="adminBtn" style="display:none" title="Admin">⚙️<span class="badge-noti" id="approveBadge">0</span></button>
+      <button class="icon-btn" id="logoutBtn" title="ออกจากระบบ">🚪</button>
+    </header>
+    <div class="card">
+      <div style="text-align:center;padding-bottom:16px;margin-bottom:16px;border-bottom:2px dashed var(--border-color)">
+        <div id="clockTime" style="font-family:'Prompt',monospace;font-size:3rem;font-weight:700;letter-spacing:.02em;color:var(--text-main);text-shadow: 2px 2px 0px var(--bg-color), 4px 4px 0px var(--primary);">--:--:--</div>
+        <div id="clockDate" style="font-size:.9rem;color:var(--text-muted);margin-top:4px;font-weight:600;"></div>
+      </div>
+      <div id="adminNotice" style="display:none; text-align:center; padding:20px; background:var(--bg-pattern); border-radius:12px; border:2px dashed var(--border-color); margin-bottom:16px;">
+        <div style="font-size:2rem; margin-bottom:8px;">👑</div>
+        <div style="font-weight:700; font-size:1.1rem;">ยินดีต้อนรับแอดมิน</div>
+        <div style="font-size:.85rem; color:var(--text-muted);">แอดมินไม่ต้องลงเวลาทำงาน<br>สามารถจัดการระบบได้ที่ปุ่ม ⚙️ ด้านบน</div>
+      </div>
+      <div class="gps-status" id="gpsStatus" style="display:none;"><span>📍</span><span></span></div>
+      <form id="attendanceForm" autocomplete="off">
+        <div class="field" style="margin-bottom:12px">
+          <span class="field-label">เลือกประเภทการลงเวลา <span class="req">*</span></span>
+          <div class="action-grid">
+            <button type="button" class="action-btn" data-action="เข้างาน"><span class="icon">🌅</span> เข้างาน</button>
+            <button type="button" class="action-btn" data-action="ออกงาน"><span class="icon">🌇</span> ออกงาน</button>
+            <button type="button" class="action-btn" data-action="ลา"><span class="icon">🌴</span> ลา</button>
+            <button type="button" class="action-btn" data-action="ไปราชการ"><span class="icon">✈️</span> ไปราชการ</button>
+          </div>
+        </div>
+        <div class="reason-section" id="reasonSection">
+          <div id="leaveOptions" style="display:none; margin-bottom:12px;">
+            <label class="field-label">ประเภทการลา</label>
+            <select id="leaveTypeSelect" class="select" style="margin-bottom:10px;">
+              <option value="ลาทั้งวัน">ลาทั้งวัน (มีช่วงวันที่)</option>
+              <option value="ลาครึ่งเช้า">ลาครึ่งเช้า</option>
+              <option value="ลาครึ่งบ่าย">ลาครึ่งบ่าย</option>
+            </select>
+          </div>
+          <div id="obOptions" style="display:none; margin-bottom:12px;">
+            <label class="field-label">ประเภทไปราชการ</label>
+            <select id="obTypeSelect" class="select" style="margin-bottom:10px;">
+              <option value="">ทั้งวัน (มีช่วงวันที่)</option>
+              <option value="ครึ่งเช้า">ครึ่งเช้า</option>
+              <option value="ครึ่งบ่าย">ครึ่งบ่าย</option>
+            </select>
+          </div>
+          <div id="dateRangeDiv" style="display:none; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div><label class="field-label" style="font-size:0.75rem;">ตั้งแต่วันที่</label><input type="text" id="leaveStartDate" class="input datepicker" placeholder="วว/ดด/ปปปป"></div>
+            <div><label class="field-label" style="font-size:0.75rem;">ถึงวันที่</label><input type="text" id="leaveEndDate" class="input datepicker" placeholder="วว/ดด/ปปปป"></div>
+          </div>
+          <div class="field" style="margin-bottom:12px"><label class="field-label">เหตุผล <span class="req">*</span></label><textarea id="reasonInput" class="textarea" placeholder="ระบุเหตุผล..." style="min-height:60px"></textarea></div>
+        </div>
+        <div class="field"><label class="field-label">หมายเหตุเพิ่มเติม</label><textarea id="noteInput" class="textarea" placeholder="ไม่บังคับ..." style="min-height:50px"></textarea></div>
+        <button type="submit" class="submit-btn" id="submitBtn">📍 บันทึกข้อมูล</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="section-title">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span>📊 รายงานประจำวัน <span class="live-indicator"><span class="live-dot"></span>LIVE</span></span>
+        </div>
+        <input type="text" id="dailyDate" class="input datepicker" style="width:130px;padding:6px 10px;font-size:.85rem" placeholder="วว/ดด/ปปปป">
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>ชื่อ</th><th>เข้า</th><th>ออก</th><th>หมายเหตุ</th></tr></thead>
+          <tbody id="dailyReportBody">
+            <tr class="skeleton-row"><td>Loading Data</td><td>--:--</td><td>--:--</td><td>Loading...</td></tr>
+            <tr class="skeleton-row"><td>Loading Data</td><td>--:--</td><td>--:--</td><td>Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div id="reportsScreen" class="screen">
+    <header class="app-header">
+      <div class="user-info">
+        <div class="user-name">📈 รายงานผล</div>
+        <div class="user-role" id="reportHeaderRole">ข้อมูลของฉัน</div>
+      </div>
+      <button class="btn-back" onclick="showScreen('dashboardScreen')">⬅️ กลับ</button>
+    </header>
+    <div class="card">
+      <div class="form-row-3" style="margin-bottom:16px">
+        <div class="field" style="margin:0"><label class="field-label">ปีการศึกษา</label><input type="text" id="reportYear" class="input" placeholder="เช่น 2569"></div>
+        <div class="field" style="margin:0"><label class="field-label">เทอม</label>
+          <select id="reportTerm" class="select"><option value="1">เทอม 1</option><option value="2">เทอม 2</option></select>
+        </div>
+        <div class="field" style="margin:0"><label class="field-label">เดือน</label>
+          <select id="reportMonth" class="select">
+            <option value="all">ทั้งหมด</option>
+            <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option>
+            <option value="04">เมษายน</option><option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+            <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option><option value="09">กันยายน</option>
+            <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+          </select>
+        </div>
+      </div>
+      <div class="reports-action-bar">
+        <div class="left">
+          <span class="cache-indicator" id="reportsCacheIndicator" style="display:none;">⚡ แคช</span>
+        </div>
+        <div class="right">
+          <img id="reportsPdfAvatar" class="avatar-xs" src="" alt="profile" style="width:32px;height:32px;">
+          <button class="btn-sm btn-cyan" id="exportPdfBtn">📄 ดาวน์โหลด PDF</button>
+        </div>
+      </div>
+      <div id="reportsTableWrap">
+        <table>
+          <thead><tr><th id="reportsDateHeader">วันที่ / ชื่อ</th><th>เข้า</th><th>ออก</th><th>หมายเหตุ</th><th id="editColHeader" style="display:none;">จัดการ</th></tr></thead>
+          <tbody id="termReportBody">
+            <tr class="skeleton-row"><td>Loading Data</td><td>--:--</td><td>--:--</td><td>Loading...</td><td></td></tr>
+            <tr class="skeleton-row"><td>Loading Data</td><td>--:--</td><td>--:--</td><td>Loading...</td><td></td></tr>
+          </tbody>
+        </table>
+        <div id="reportTableSpacer" style="height: 100vh; width: 1px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="profileScreen" class="screen">
+    <header class="app-header">
+      <div class="user-info">
+        <div class="user-name">👤 ตั้งค่าโปรไฟล์</div>
+        <div class="user-role">แก้ไขข้อมูลส่วนตัว</div>
+      </div>
+      <button class="btn-back" onclick="showScreen('dashboardScreen')">⬅️ กลับ</button>
+    </header>
+    <div class="card">
+      <form id="profileForm">
+        <div class="profile-pic-upload" style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:20px">
+          <img id="profilePicPreview" class="avatar-lg" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:var(--border-width) solid var(--border-color);box-shadow:var(--shadow-hard), var(--glow-primary);" src="" alt="profile">
+          <label class="btn-sm btn-cyan" style="cursor:pointer">📷 เปลี่ยนรูปภาพ<input type="file" id="profilePicInput" accept="image/*" style="display:none"></label>
+        </div>
+        <div class="field"><label class="field-label">ชื่อผู้ใช้ <span class="req">*</span></label><input type="text" id="profUsername" class="input" required disabled style="opacity:0.6;"></div>
+        <div class="field"><label class="field-label">ชื่อ-นามสกุล <span class="req">*</span></label><input type="text" id="profFullName" class="input" required></div>
+        <div class="field"><label class="field-label">ตำแหน่ง</label>
+          <select id="profPosition" class="select"><option value="ครู">ครู</option><option value="ผอ.">ผอ.</option><option value="พนักงาน">พนักงาน</option><option value="ลูกจ้าง">ลูกจ้าง</option></select>
+        </div>
+        <div class="field"><label class="field-label">อีเมล</label><input type="email" id="profEmail" class="input"></div>
+        <div class="field" style="background: var(--bg-color); padding: 16px; border-radius: var(--radius-md); text-align: center; border:2px solid var(--border-color)">
+          <label class="field-label" style="justify-content:center">ลายเซ็นดิจิทัล (ใช้ในรายงาน PDF)</label>
+          <img id="sigPreview" src="" style="max-height: 60px; margin-bottom: 12px; display: none; background: #fff; padding: 4px; border-radius: 4px; border:1px solid #ccc;">
+          <label for="sigInput" class="btn-sm btn-emerald" style="display: inline-block; cursor: pointer;">อัปโหลดลายเซ็น</label>
+          <input type="file" id="sigInput" accept="image/*" style="display: none;">
+        </div>
+        <button type="submit" class="submit-btn" id="saveProfileBtn">💾 บันทึกข้อมูล</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="section-title">🔑 เปลี่ยนรหัสผ่าน</div>
+      <form id="passwordForm">
+        <div class="field"><label class="field-label">รหัสผ่านเดิม</label><input type="password" id="oldPw" class="input" required></div>
+        <div class="field"><label class="field-label">รหัสผ่านใหม่ (6+)</label><input type="password" id="newPw" class="input" required></div>
+        <button type="submit" class="submit-btn" style="background:var(--accent);" id="savePwBtn">เปลี่ยนรหัสผ่าน</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="adminScreen" class="screen">
+    <header class="app-header">
+      <button class="btn-back" onclick="showScreen('dashboardScreen')">⬅️ กลับ</button>
+      <div class="user-info">
+        <div class="user-name">Admin Panel</div>
+        <div class="user-role">จัดการระบบ</div>
+      </div>
+    </header>
+    <div class="card">
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab active" data-tab="pending">รออนุมัติผู้ใช้</button>
+        <button class="tab" data-tab="leaves">อนุมัติ (ผอ.)</button>
+        <button class="tab" data-tab="users">ผู้ใช้</button>
+        <button class="tab" data-tab="settings">ตั้งค่า</button>
+      </div>
+      <div class="tab-content active" id="pendingTab"><div class="section-title">👥 ผู้ใช้รออนุมัติ</div><div id="pendingList" style="display:flex;flex-direction:column;gap:10px"></div></div>
+      <div class="tab-content" id="leavesTab"><div class="section-title">🌴 รออนุมัติการลา / ไปราชการ (ผอ.)</div><div id="leavesList" style="display:flex;flex-direction:column;gap:10px"></div></div>
+      <div class="tab-content" id="usersTab"><div class="section-title">👤 ผู้ใช้ทั้งหมด</div><div id="usersList" style="display:flex;flex-direction:column;gap:10px"></div></div>
+      <div class="tab-content" id="settingsTab">
+        <div class="section-title">⚙️ ตั้งค่าสำนักงาน</div>
+        <div class="field"><label class="field-label">ชื่อสำนักงาน</label><input type="text" id="setOfficeName" class="input"></div>
+        <div class="form-row-2">
+          <div class="field"><label class="field-label">ละติจูด</label><input type="number" id="setOfficeLat" class="input" step="any"></div>
+          <div class="field"><label class="field-label">ลองจิจูด</label><input type="number" id="setOfficeLng" class="input" step="any"></div>
+        </div>
+        <button type="button" class="btn-sm btn-cyan" id="btnUseCurrentGps" style="width:100%;margin-bottom:16px;">📍 ใช้ตำแหน่ง GPS ปัจจุบัน</button>
+        <div class="field"><label class="field-label">รัศมี (เมตร)</label><input type="number" id="setRadius" class="input"></div>
+        <div class="field"><label class="checkbox-group"><input type="checkbox" id="setStrictReg"> บังคับรัศมีตอนลงทะเบียน</label></div>
+
+        <div class="section-title" style="margin-top:20px;border-top:2px dashed var(--border-color);padding-top:16px">📅 วันเปิด/ปิดเทอม</div>
+        <div class="form-row-2">
+          <div class="field"><label class="field-label">เปิดเทอม 1</label><input type="text" id="setT1Start" class="input datepicker" placeholder="วว/ดด/ปปปป"></div>
+          <div class="field"><label class="field-label">ปิดเทอม 1</label><input type="text" id="setT1End" class="input datepicker" placeholder="วว/ดด/ปปปป"></div>
+        </div>
+        <div class="form-row-2">
+          <div class="field"><label class="field-label">เปิดเทอม 2</label><input type="text" id="setT2Start" class="input datepicker" placeholder="วว/ดด/ปปปป"></div>
+          <div class="field"><label class="field-label">ปิดเทอม 2</label><input type="text" id="setT2End" class="input datepicker" placeholder="วว/ดด/ปปปป"></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:12px;font-weight:500;">💡 ใช้สำหรับ: auto-fill หยุดหลังปิดเทอม / PDF รายงานถึงวันปิดเทอม</div>
+
+        <div class="section-title" style="margin-top:20px;border-top:2px dashed var(--border-color);padding-top:16px">📆 ปีการศึกษา</div>
+        <div class="field"><label class="field-label">ปีการศึกษา (พ.ศ.)</label><input type="text" id="setAcademicYear" class="input" placeholder="เช่น 2569">
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:6px;font-weight:500;">💡 ระบบสร้าง Sheet <b>attendance{ปี}</b> อัตโนมัติเมื่อมีการลงเวลา</div>
+        </div>
+
+        <button type="button" class="btn-sm btn-warning" id="btnMigrateSheets" style="width:100%;margin-bottom:16px;">🔧 Migrate ชีทเก่า (attendance1/2-YYYY → attendanceYYYY)</button>
+
+        <button type="button" class="submit-btn" id="saveSettingsBtn">💾 บันทึกการตั้งค่าทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+  <div class="nav-item active" onclick="navTo('dashboardScreen', this)"><span class="nav-icon">🏠</span> หน้าหลัก</div>
+  <div class="nav-item" onclick="navTo('reportsScreen', this)"><span class="nav-icon">📈</span> รายงานผล</div>
+  <div class="nav-item" onclick="navTo('profileScreen', this)"><span class="nav-icon">👤</span> โปรไฟล์</div>
+</div>
+
+<div class="toast" id="toast"><span id="toastIcon">📋</span><span id="toastMsg"></span></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="pdfModal">
+  <div class="modal">
+    <h3 style="margin-bottom:14px;font-size:1.2rem;font-weight:700;">📄 ดาวน์โหลดรายงาน PDF</h3>
+    <div class="field">
+      <label class="field-label">เลือกเดือนที่ต้องการ</label>
+      <select id="pdfMonthSelect" class="select" required>
+        <option value="all">ทุกเดือน (เฉพาะเดือนที่มีข้อมูล)</option>
+        <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option>
+        <option value="04">เมษายน</option><option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+        <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option><option value="09">กันยายน</option>
+        <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn-sm btn-neutral" onclick="closePdfModal()">ยกเลิก</button>
+      <button class="btn-sm btn-emerald" id="confirmPdfBtn" onclick="downloadPdf()">ดาวน์โหลด</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editUserModal">
+  <div class="modal">
+    <h3 style="margin-bottom:14px;font-size:1.2rem;font-weight:700;">✏️ แก้ไขข้อมูลผู้ใช้</h3>
+    <input type="hidden" id="editTargetUsername">
+    <input type="hidden" id="editUserRole">
+    <div class="field"><label class="field-label">Username</label><input type="text" id="editUserUsername" class="input" disabled></div>
+    <div class="field"><label class="field-label">ชื่อ-นามสกุล</label><input type="text" id="editUserFullName" class="input"></div>
+    <div class="field"><label class="field-label">ตำแหน่ง</label>
+      <select id="editUserPosition" class="select"><option value="ครู">ครู</option><option value="ผอ.">ผอ.</option><option value="พนักงาน">พนักงาน</option><option value="ลูกจ้าง">ลูกจ้าง</option></select>
+    </div>
+    <div class="field" style="background:var(--bg-color); padding:12px; border-radius:12px; border:2px solid var(--border-color);">
+      <label class="checkbox-group" id="editGpsOverrideGroup"><input type="checkbox" id="editUserGpsOverride" style="width:20px; height:20px;"><span style="font-weight:700;">อนุญาตให้ลงเวลานอกพื้นที่ GPS</span></label>
+    </div>
+    <div class="field"><label class="field-label">อีเมล</label><input type="email" id="editUserEmail" class="input"></div>
+    <div class="field"><label class="field-label">รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)</label><input type="password" id="editUserPassword" class="input"></div>
+    <div class="field"><label class="field-label">สถานะ (Status)</label>
+      <select id="editUserStatus" class="select"><option value="approved">อนุมัติแล้ว</option><option value="pending">รออนุมัติ</option><option value="rejected">ถูกระงับ</option></select>
+    </div>
+    <div class="field"><label class="field-label">อัปโหลดรูปโปรไฟล์ใหม่</label><input type="file" id="editUserPicInput" accept="image/*" class="input" style="padding:8px"></div>
+    <div class="field"><label class="field-label">อัปโหลดลายเซ็นใหม่</label><input type="file" id="editUserSigInput" accept="image/*" class="input" style="padding:8px"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn-sm btn-neutral" onclick="closeEditUserModal()">ยกเลิก</button>
+      <button class="btn-sm btn-emerald" id="saveEditUserBtn" onclick="saveEditUser()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editAttendanceModal">
+  <div class="modal">
+    <h3 style="margin-bottom:14px;font-size:1.2rem;font-weight:700;">✏️ แก้ไขประวัติการลงเวลา</h3>
+    <input type="hidden" id="editAttName">
+    <input type="hidden" id="editAttOrigDate">
+    <div class="field"><label class="field-label">ชื่อ-นามสกุล</label><input type="text" id="editAttNameDisplay" class="input" disabled></div>
+    <div class="field"><label class="field-label">วันที่ (DD/MM/YYYY)</label><input type="text" id="editAttDate" class="input datepicker" placeholder="เช่น 05/11/2026"></div>
+    <div class="form-row-2">
+      <div class="field"><label class="field-label">เวลาเข้า</label><input type="text" id="editAttInTime" class="input" placeholder="เช่น 08:00 หรือ -"></div>
+      <div class="field"><label class="field-label">เวลาออก</label><input type="text" id="editAttOutTime" class="input" placeholder="เช่น 16:30 หรือ -"></div>
+    </div>
+    <div class="field"><label class="field-label">หมายเหตุ</label><textarea id="editAttNote" class="textarea" style="min-height:60px;"></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:20px;">
+      <button class="btn-sm btn-danger" id="deleteEditAttBtn" onclick="deleteEditAttendance()">🗑️ ลบรายการ</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-sm btn-neutral" onclick="closeEditAttendanceModal()">ยกเลิก</button>
+        <button class="btn-sm btn-emerald" id="saveEditAttBtn" onclick="saveEditAttendance()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Flatpickr Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
+
+<script>
+// ============================================================
+// THEME ENGINE
+// ============================================================
+function applyTheme() {
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  let theme = 'default';
+  let emojis = ['✨', '☁️', '⭐', '🌟'];
+  if (m === 1) { theme = 'newyear'; emojis = ['🎉', '🎆', '🥂', '✨', '🎊']; }
+  else if (m === 2) { theme = 'valentine'; emojis = ['💖', '🌹', '💝', '💌', '💕']; }
+  else if (m === 4) { theme = 'songkran'; emojis = ['💦', '🌊', '🌺', '🐟', '🪷']; }
+  else if (m === 10 && d >= 25) { theme = 'halloween'; emojis = ['🎃', '👻', '🦇', '🕷️', '🧙‍♀️']; }
+  else if (m === 11 && d <= 15) { theme = 'loykrathong'; emojis = ['🏮', '🌕', '🪷', '🕯️', '🌌']; }
+  else if (m === 12 && d >= 15) { theme = 'christmas'; emojis = ['❄️', '🎄', '🎅', '🎁', '⛄']; }
+  document.body.setAttribute('data-theme', theme);
+  const container = document.getElementById('holiday-decorations');
+  if (!container) return;
+  container.innerHTML = '';
+  for (let i = 0; i < 20; i++) {
+    const span = document.createElement('span');
+    span.className = 'floating-emoji';
+    span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    span.style.left = `${Math.random() * 100}vw`;
+    span.style.animationDelay = `${Math.random() * 10}s`;
+    span.style.fontSize = `${Math.random() * 1.5 + 1.5}rem`;
+    span.style.animationDuration = `${Math.random() * 8 + 10}s`;
+    container.appendChild(span);
+  }
+}
+applyTheme();
+
+// ============================================================
+// DATE PICKER SETUP
+// ============================================================
+const THAI_MONTHS_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+
+function getLocalDateStr(d = new Date()) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function thaiDateStrToDate(thaiStr) {
+  if (!thaiStr) return null;
+  const parts = String(thaiStr).trim().split('/');
+  if (parts.length !== 3) return null;
+  let day = parseInt(parts[0], 10);
+  let year = parseInt(parts[2], 10);
+  let monthStr = parts[1];
+  let month = THAI_MONTHS_SHORT.indexOf(monthStr);
+  if (month < 0) {
+    month = parseInt(monthStr, 10) - 1;
+  }
+  if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+  if (year > 2400) year -= 543;
+  return new Date(year, month, day);
+}
+
+const datePickers = {};
+function initDatePickers() {
+  if (typeof flatpickr === 'undefined') {
+    console.warn('Flatpickr not loaded. Using native date input fallback.');
+    document.querySelectorAll('.datepicker').forEach(el => {
+      el.type = 'date';
+      if (!el.value) el.value = getLocalDateStr();
+    });
+    return;
+  }
+
+  const fpConfig = {
+    locale: "th",
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d/m/Y",
+    allowInput: false,
+    defaultDate: new Date(),
+    formatDate: (date, format, locale) => {
+      if (format === "d/m/Y") {
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear() + 543;
+        return `${d}/${m}/${y}`;
+      }
+      return flatpickr.formatDate(date, format, locale);
+    },
+    parseDate: (dateStr, format, locale) => {
+      if (format === "d/m/Y") {
+        if (!dateStr) return null;
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          let y = parseInt(parts[2], 10);
+          if (y > 2400) y -= 543;
+          let m = THAI_MONTHS_SHORT.indexOf(parts[1]);
+          if (m < 0) m = parseInt(parts[1], 10) - 1;
+          return new Date(y, m, parseInt(parts[0], 10));
+        }
+      }
+      return flatpickr.parseDate(dateStr, format, locale);
+    }
+  };
+
+  document.querySelectorAll('.datepicker').forEach(el => {
+    let config = { ...fpConfig };
+    if (el.id === 'dailyDate') {
+      config.onChange = function(selectedDates, dateStr, instance) {
+        state.dailyDateAuto = (dateStr === getLocalDateStr());
+        loadDailyReport();
+      };
+    }
+    datePickers[el.id] = flatpickr(el, config);
+  });
+}
+document.addEventListener('DOMContentLoaded', initDatePickers);
+
+// ============================================================
+// SOUND
+// ============================================================
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function initAudio() { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
+function playClickSound() {
+  initAudio(); if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+}
+function playWelcomeVoice() {
+  if (sessionStorage.getItem('welcomePlayed')) return;
+  sessionStorage.setItem('welcomePlayed', 'true');
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance('ยินดีต้อนรับจ้า');
+    u.lang = 'th-TH'; u.rate = 1.0; u.pitch = 1.2;
+    setTimeout(() => window.speechSynthesis.speak(u), 800);
+  }
+}
+document.addEventListener('click', (e) => {
+  initAudio();
+  if (e.target.closest('button') || e.target.closest('.tab') || e.target.closest('.nav-item') || e.target.closest('.action-btn')) playClickSound();
+});
+document.body.addEventListener('click', function initWelcome() {
+  playWelcomeVoice();
+  document.body.removeEventListener('click', initWelcome);
+}, { once: true });
+
+// ============================================================
+// CONFIG & STATE
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbyDE1PsL1XNzxMAWFsG54064zml4FJONUOKWPvof5BvZyKxqD_XOznzpamM8j1JrS4/exec';
+const CACHE_TTL_REPORTS = 4 * 1000;
+const CACHE_TTL_DAILY   = 2 * 1000;
+const POLL_INTERVAL_MS  = 1500;  // ⚡ real-time: 1.5s (เดิม 2s)
+
+const state = {
+  token: localStorage.getItem('tt_token') || '',
+  user: JSON.parse(localStorage.getItem('tt_user') || 'null'),
+  settings: null,
+  selectedAction: null,
+  currentPos: null,
+  posTimestamp: 0,
+  loadingAuth: false,
+  profilePicBase64: null,
+  signatureBase64: null,
+  editUserPicBase64: null,
+  editUserSigBase64: null,
+  dailyDateAuto: true,
+  todayRecord: null,
+  todayLeave: null,
+  todayPendingLeave: null,
+  approvedList: [],
+  lastStatusFetch: 0,
+  reportsCache: {},
+  reportsLoadingKey: null,
+  reportsInited: false,
+  currentReportRecords: [],
+  adminUsers: [],
+  dailyReportCache: {},
+  dailyLoadingKey: null,
+  pollTimer: null,
+  userDict: {},
+  isPendingLeaveLocked: false
+};
+
+function esc(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function getFirstName(fullName) {
+  if (!fullName) return '';
+  return String(fullName).trim().split(/\s+/)[0] || fullName;
+}
+function isManager() {
+  return !!state.user && (state.user.role === 'admin' || state.user.position === 'ผอ.');
+}
+function isAdminRole() {
+  return !!state.user && state.user.role === 'admin';
+}
+function termForDateClient(ms) {
+  const d = new Date(ms);
+  const buddhistYear = d.getFullYear() + 543;
+  const month = d.getMonth() + 1;
+  const day   = d.getDate();
+  const inTerm1 = (month >= 5 && month <= 9) || (month === 10 && day <= 15);
+  return { term: inTerm1 ? '1' : '2', year: String(buddhistYear) };
+}
+
+function dmyToMsClient(str) {
+  const m = String(str || '').match(/^(\d{1,2})\/([ก-ฮ\.\w]+)\/(\d{4})$/);
+  if (!m) return 0;
+  let y = parseInt(m[3], 10);
+  if (y > 3000) y -= 543;
+  else if (y > 2400) y -= 543;
+  let mIdx = THAI_MONTHS_SHORT.indexOf(m[2]);
+  if (mIdx < 0) mIdx = parseInt(m[2], 10) - 1;
+  return new Date(y, mIdx, parseInt(m[1], 10)).getTime();
+}
+
+async function api(cmd, extra = {}) {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ cmd, token: state.token, ...extra })
+    });
+    const data = await res.json();
+    if (data && data.code === 'AUTH' && cmd !== 'login' && cmd !== 'logout' && state.token) {
+      forceLogout(data.message);
+    }
+    return data;
+  } catch (err) {
+    return { success: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ' };
+  }
+}
+function forceLogout(msg) {
+  localStorage.removeItem('tt_token');
+  localStorage.removeItem('tt_user');
+  sessionStorage.removeItem('voicePlayed');
+  state.token = ''; state.user = null;
+  clearAllCaches();
+  stopPolling();
+  state.dailyDateAuto = true;
+  const dd = datePickers['dailyDate']; if (dd) dd.clear();
+  showScreen('authScreen');
+  toast(msg || 'กรุณาเข้าสู่ระบบใหม่', 'error');
+}
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = type === 'success' ? '✅' : '⚠️';
+  document.getElementById('toastMsg').textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 4000);
+}
+function speakPendingAlerts(hasLeave, hasOB) {
+  if (sessionStorage.getItem('voicePlayed') === 'true') return;
+  if (!('speechSynthesis' in window)) return;
+  let msg = '';
+  if (hasLeave && hasOB) msg = 'โปรดอนุมัติการลาและการไปราชการด้วย';
+  else if (hasLeave) msg = 'โปรดอนุมัติการลาด้วย';
+  else if (hasOB) msg = 'โปรดอนุมัติการไปราชการด้วย';
+  if (!msg) return;
+  const play = () => {
+    const u = new SpeechSynthesisUtterance(msg);
+    u.lang = 'th-TH'; u.rate = 0.9; u.pitch = 1.1;
+    window.speechSynthesis.speak(u);
+  };
+  play(); setTimeout(play, 2500);
+  sessionStorage.setItem('voicePlayed', 'true');
+}
+function invalidateAllReportCaches() {
+  Object.keys(state.reportsCache).forEach(k => { state.reportsCache[k].ts = 0; });
+  Object.keys(state.dailyReportCache).forEach(k => { state.dailyReportCache[k].ts = 0; });
+}
+function clearAllCaches() {
+  state.reportsCache = {};
+  state.reportsLoadingKey = null;
+  state.reportsInited = false;
+  state.dailyReportCache = {};
+  state.dailyLoadingKey = null;
+  state.lastStatusFetch = 0;
+  state.userDict = {};
+  state.selectedAction = null;
+  state.isPendingLeaveLocked = false;
+}
+
+// ⚡ แก้: ลด redundant API calls ตอน poll — เรียก checkTodayStatus แบบมี throttle
+// และ checkPendingCounts แบบมี throttle ทำให้ loadDailyReport ได้ bandwidth เต็ม
+function pollTick() {
+  if (document.hidden || !state.token) return;
+  const activeScreen = document.querySelector('.screen.active');
+  if (!activeScreen) return;
+  if (activeScreen.id === 'dashboardScreen') {
+    loadDailyReport(false, true);
+    checkTodayStatus();                          // ⚡ ไม่ force — ใช้ throttle 10s
+    if (isManager()) checkPendingCounts();       // ⚡ ไม่ force — ใช้ throttle 15s
+  } else if (activeScreen.id === 'reportsScreen') {
+    loadReports(false, true);
+  }
+}
+function startPolling() {
+  if (state.pollTimer) clearInterval(state.pollTimer);
+  state.pollTimer = setInterval(pollTick, POLL_INTERVAL_MS);
+}
+function stopPolling() {
+  if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && state.token) {
+    loadDailyReport(true);
+    loadReports(true);
+    checkTodayStatus(true);
+  }
+});
+window.addEventListener('focus', () => {
+  if (state.token) {
+    loadDailyReport(true);
+    loadReports(true);
+    checkTodayStatus(true);
+  }
+});
+
+function refreshDashboardMode() {
+  if (!state.user) return;
+  const isAdmin = state.user.role === 'admin';
+  document.getElementById('attendanceForm').style.display = isAdmin ? 'none' : 'block';
+  document.getElementById('adminNotice').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('adminBtn').style.display = isManager() ? 'flex' : 'none';
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  const nav = document.getElementById('bottomNav');
+  if (['dashboardScreen', 'reportsScreen', 'profileScreen'].includes(name)) nav.classList.add('show');
+  else nav.classList.remove('show');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItems = document.querySelectorAll('.nav-item');
+  if (name === 'dashboardScreen') navItems[0].classList.add('active');
+  if (name === 'reportsScreen') navItems[1].classList.add('active');
+  if (name === 'profileScreen') navItems[2].classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (name === 'dashboardScreen' && state.user) {
+    refreshDashboardMode();
+    checkTodayStatus(true);
+    loadDailyReport();
+  }
+  if (name === 'reportsScreen') {
+    const mgr = isManager();
+    document.getElementById('reportHeaderRole').textContent = mgr ? 'ข้อมูลพนักงานทุกคน' : 'ข้อมูลของฉัน';
+    document.getElementById('editColHeader').style.display = mgr ? 'table-cell' : 'none';
+    document.getElementById('reportsDateHeader').textContent = mgr ? 'วันที่ / ชื่อ' : 'วันที่';
+    if (state.user && state.user.profilePic) {
+      document.getElementById('reportsPdfAvatar').src = state.user.profilePic;
+    }
+    initReportsDefaults();
+    loadReports();
+  }
+  if (name === 'profileScreen') updateProfileUI();
+  if (name === 'dashboardScreen' || name === 'reportsScreen') startPolling(); else stopPolling();
+}
+
+function initReportsDefaults() {
+  const { term: todayTerm, year: todayYear } = termForDateClient(Date.now());
+  const curYear = state.settings?.currentYear || todayYear;
+  const curTerm = state.settings?.currentTerm || todayTerm;
+  const curMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+  document.getElementById('reportYear').value = curYear;
+  document.getElementById('reportTerm').value = curTerm;
+  document.getElementById('reportMonth').value = curMonth;
+}
+function navTo(screen, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  showScreen(screen);
+}
+
+setInterval(() => {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0'), ss = String(now.getSeconds()).padStart(2,'0');
+  const ct = document.getElementById('clockTime'); if (ct) ct.textContent = `${hh}:${mm}:${ss}`;
+  const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const cd = document.getElementById('clockDate');
+  if (cd) cd.textContent = `วัน${days[now.getDay()]}ที่ ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()+543}`;
+}, 1000);
+
+function getGPS() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error('เบราว์เซอร์ไม่รองรับ GPS'));
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      err => {
+        let msg = 'ไม่สามารถระบุตำแหน่งได้';
+        if (err.code === 1) msg = 'กรุณาอนุญาตการเข้าถึง Location';
+        else if (err.code === 2) msg = 'ไม่พบสัญญาณ GPS';
+        else if (err.code === 3) msg = 'หมดเวลาค้นหา GPS';
+        reject(new Error(msg));
+      },
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
+    );
+  });
+}
+async function refreshPosition() {
+  const pos = await getGPS();
+  state.currentPos = pos; state.posTimestamp = Date.now();
+  return pos;
+}
+function getFreshPosition() {
+  if (state.currentPos && Date.now() - state.posTimestamp < 60000) return Promise.resolve(state.currentPos);
+  return refreshPosition();
+}
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+document.querySelectorAll('#authScreen .tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#authScreen .tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('#authScreen .tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(tab.dataset.tab + 'Form').classList.add('active');
+  });
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (state.loadingAuth) return;
+  const btn = document.getElementById('loginBtn');
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const remember = document.getElementById('rememberMe').checked;
+  if (!username || !password) return toast('กรอกข้อมูลให้ครบ', 'error');
+  state.loadingAuth = true; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังโหลด...';
+  const res = await api('login', { username, password });
+  if (!res.success) {
+    state.loadingAuth = false; btn.disabled = false; btn.textContent = '🚀 เข้าสู่ระบบ';
+    return toast(res.message, 'error');
+  }
+  state.token = res.token; state.user = res.user;
+  clearAllCaches();
+  if (remember) {
+    localStorage.setItem('tt_token', res.token);
+    localStorage.setItem('tt_user', JSON.stringify(res.user));
+  } else {
+    localStorage.removeItem('tt_token');
+    localStorage.removeItem('tt_user');
+  }
+  sessionStorage.removeItem('voicePlayed');
+  await initUserSession();
+  state.loadingAuth = false; btn.disabled = false; btn.textContent = '🚀 เข้าสู่ระบบ';
+});
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (state.loadingAuth) return;
+  const username = document.getElementById('regUsername').value.trim().toLowerCase();
+  const fullName = document.getElementById('regFullName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const password2 = document.getElementById('regPassword2').value;
+  if (!/^[a-z0-9_]{3,}$/.test(username)) return toast('ชื่อผู้ใช้ใช้ได้เฉพาะ a-z, 0-9, _ (อย่างน้อย 3 ตัว)', 'error');
+  if (!fullName) return toast('กรุณากรอกชื่อ-นามสกุล', 'error');
+  if (password.length < 6) return toast('รหัสผ่านอย่างน้อย 6 ตัวอักษร', 'error');
+  if (password !== password2) return toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', 'error');
+
+  const btn = document.getElementById('registerBtn');
+  const gpsEl = document.getElementById('regGpsStatus');
+  state.loadingAuth = true; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังลงทะเบียน...';
+  let pos = { lat: null, lng: null };
+  try {
+    gpsEl.className = 'gps-status loading';
+    gpsEl.innerHTML = '<span>⏳</span><span>กำลังตรวจสอบตำแหน่ง...</span>';
+    pos = await getGPS();
+    gpsEl.className = 'gps-status ok';
+    gpsEl.innerHTML = '<span>✅</span><span>ได้รับตำแหน่ง GPS แล้ว</span>';
+  } catch (err) {
+    gpsEl.className = 'gps-status bad';
+    gpsEl.innerHTML = `<span>❌</span><span>${esc(err.message)}</span>`;
+  }
+  const res = await api('register', { username, password, fullName, email, lat: pos.lat, lng: pos.lng });
+  state.loadingAuth = false; btn.disabled = false; btn.textContent = '✨ ลงทะเบียน';
+  if (res.success) {
+    toast(res.message);
+    document.getElementById('registerForm').reset();
+    document.querySelector('#authScreen .tab[data-tab="login"]').click();
+  } else toast(res.message, 'error');
+});
+
+async function initUserSession() {
+  if (!state.user || !state.token) return false;
+  const res = await api('getInitData');
+  if (!res.success) {
+    if (res.code !== 'AUTH') toast(res.message || 'ไม่สามารถโหลดข้อมูลได้', 'error');
+    return false;
+  }
+  state.settings = res.settings;
+  state.user = res.user;
+  if (localStorage.getItem('tt_token')) localStorage.setItem('tt_user', JSON.stringify(res.user));
+  state.todayRecord = res.todayRecord;
+  state.todayLeave = res.todayLeave;
+  state.todayPendingLeave = res.todayPendingLeave;
+  state.approvedList = res.approvedList || [];
+  state.lastStatusFetch = Date.now();
+
+  document.getElementById('dashName').textContent = getFirstName(state.user.fullName);
+  const displayPos = state.user.position || 'ครู';
+  document.getElementById('dashRole').textContent = `${state.user.username} · ${displayPos}`;
+  document.getElementById('dashPic').src = state.user.profilePic || 'https://via.placeholder.com/64';
+  const rptAvatar = document.getElementById('reportsPdfAvatar');
+  if (rptAvatar) rptAvatar.src = state.user.profilePic || '';
+
+  fillSettingsForm(res.settings);
+  updateActionButtonsUI();
+  
+  if (datePickers['dailyDate']) {
+    datePickers['dailyDate'].setDate(new Date(), true);
+  } else {
+    const dd = document.getElementById('dailyDate');
+    if (dd) dd.value = getLocalDateStr();
+  }
+  state.dailyDateAuto = true;
+
+  if (isManager()) checkPendingCounts(true);   // ⚡ force ครั้งแรกหลัง login
+  showScreen('dashboardScreen');
+  return true;
+}
+
+function fillSettingsForm(s) {
+  document.getElementById('setAcademicYear').value = s.academicYear || '';
+  document.getElementById('setOfficeName').value = s.officeName || '';
+  document.getElementById('setOfficeLat').value = s.officeLat || '';
+  document.getElementById('setOfficeLng').value = s.officeLng || '';
+  document.getElementById('setRadius').value = s.radius || '';
+  document.getElementById('setStrictReg').checked = !!s.strictRegistration;
+  
+  if (datePickers['setT1Start']) datePickers['setT1Start'].setDate(s.term1_start);
+  if (datePickers['setT1End']) datePickers['setT1End'].setDate(s.term1_end);
+  if (datePickers['setT2Start']) datePickers['setT2Start'].setDate(s.term2_start);
+  if (datePickers['setT2End']) datePickers['setT2End'].setDate(s.term2_end);
+}
+
+function applyUserUpdate(u) {
+  if (!u || !state.user) return;
+  const changed = u.position !== state.user.position || u.role !== state.user.role || u.fullName !== state.user.fullName;
+  state.user = { ...state.user, ...u };
+  if (localStorage.getItem('tt_token')) localStorage.setItem('tt_user', JSON.stringify(state.user));
+  document.getElementById('dashName').textContent = getFirstName(state.user.fullName);
+  document.getElementById('dashRole').textContent = `${state.user.username} · ${state.user.position || 'ครู'}`;
+  if (state.user.profilePic) {
+    document.getElementById('dashPic').src = state.user.profilePic;
+    const rptAvatar = document.getElementById('reportsPdfAvatar');
+    if (rptAvatar) rptAvatar.src = state.user.profilePic;
+  }
+  if (changed) {
+    refreshDashboardMode();
+    if (isManager()) checkPendingCounts(true);   // ⚡ force เมื่อ role เปลี่ยน
+  }
+}
+
+// ⚡ แก้: เพิ่ม throttle 15s (เดิมยิงทุก 2s ทำให้ Apps Script throttle ทำให้ getDailyReport ช้า)
+let _lastPendingCountFetch = 0;
+async function checkPendingCounts(force = false) {
+  if (!isManager()) return;
+  if (!force && Date.now() - _lastPendingCountFetch < 15000) return;
+  _lastPendingCountFetch = Date.now();
+  const res = await api('getPendingCounts');
+  if (res.success) {
+    const total = res.countLeave + res.countOB;
+    const badge = document.getElementById('approveBadge');
+    if (badge) {
+      badge.textContent = total > 0 ? total : '';
+      badge.style.display = total > 0 ? 'inline-block' : 'none';
+    }
+    if (total > 0) speakPendingAlerts(res.countLeave > 0, res.countOB > 0);
+  }
+}
+
+(async function checkAuth() {
+  if (!state.token || !state.user) return;
+  const ok = await initUserSession();
+  if (!ok) {
+    localStorage.removeItem('tt_token');
+    localStorage.removeItem('tt_user');
+    state.token = ''; state.user = null;
+    showScreen('authScreen');
+  }
+})();
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await api('logout');
+  localStorage.removeItem('tt_token');
+  localStorage.removeItem('tt_user');
+  sessionStorage.removeItem('voicePlayed');
+  state.token = ''; state.user = null;
+  clearAllCaches();
+  stopPolling();
+  state.dailyDateAuto = true;
+  if (datePickers['dailyDate']) datePickers['dailyDate'].clear();
+  showScreen('authScreen');
+  toast('ออกจากระบบแล้ว');
+});
+
+async function checkTodayStatus(force = false) {
+  if (!state.user) return;
+  if (!force && Date.now() - state.lastStatusFetch < 10000) {
+    updateActionButtonsUI();
+    return;
+  }
+  const res = await api('getTodayStatus');
+  if (res.success) {
+    state.todayRecord = res.record;
+    state.todayLeave = res.leave;
+    state.todayPendingLeave = res.pendingLeave;
+    state.approvedList = res.approvedList || [];
+    state.lastStatusFetch = Date.now();
+    if (res.settings) state.settings = { ...state.settings, ...res.settings };
+    if (res.user) applyUserUpdate(res.user);
+    updateActionButtonsUI();
+  }
+}
+
+function updateActionButtonsUI() {
+  const btns = document.querySelectorAll('.action-btn');
+  btns.forEach(btn => { btn.disabled = false; btn.classList.remove('active'); });
+  const hasTime = t => !!t && t !== '-' && t !== '';
+
+  if (state.todayRecord) {
+    if (hasTime(state.todayRecord.inTime)) {
+      const btnIn = document.querySelector('.action-btn[data-action="เข้างาน"]');
+      if (btnIn) { btnIn.disabled = true; btnIn.classList.add('active'); }
+    }
+    if (hasTime(state.todayRecord.outTime)) {
+      const btnOut = document.querySelector('.action-btn[data-action="ออกงาน"]');
+      if (btnOut) { btnOut.disabled = true; btnOut.classList.add('active'); }
+    }
+  }
+
+  if (state.todayPendingLeave) {
+    btns.forEach(btn => btn.disabled = true);
+    if (state.isPendingLeaveLocked !== true) {
+      toast('คุณมีคำขอที่รอการอนุมัติอยู่ ไม่สามารถลงเวลาได้', 'error');
+      state.isPendingLeaveLocked = true;
+    }
+  } else {
+    state.isPendingLeaveLocked = false;
+  }
+
+  const approvedList = state.approvedList || (state.todayLeave ? [state.todayLeave.type] : []);
+  const FULL_LOCK = ['ลาทั้งวัน','ไปราชการ'];
+  const hasFull = approvedList.some(t => FULL_LOCK.indexOf(t) >= 0);
+
+  if (hasFull) {
+    btns.forEach(btn => { btn.disabled = true; });
+  }
+  updateLeaveOptionsAvailability(approvedList);
+
+  if (state.selectedAction) {
+    const sel = document.querySelector(`.action-btn[data-action="${state.selectedAction}"]`);
+    if (sel && !sel.disabled) sel.classList.add('active');
+    else {
+      state.selectedAction = null;
+      document.getElementById('reasonSection').classList.remove('visible');
+    }
+  }
+}
+
+function updateLeaveOptionsAvailability(approvedList) {
+  const hasMorning = approvedList.some(t => t === 'ลาครึ่งเช้า' || t === 'ไปราชการครึ่งเช้า');
+  const hasAfternoon = approvedList.some(t => t === 'ลาครึ่งบ่าย' || t === 'ไปราชการครึ่งบ่าย');
+  const hasFull = approvedList.some(t => t === 'ลาทั้งวัน' || t === 'ไปราชการ');
+
+  const leaveSel = document.getElementById('leaveTypeSelect');
+  const obSel = document.getElementById('obTypeSelect');
+  if (leaveSel) {
+    Array.from(leaveSel.options).forEach(o => {
+      o.disabled = false;
+      if (hasFull && o.value !== '') o.disabled = true;
+      if (hasMorning && o.value === 'ลาครึ่งเช้า') o.disabled = true;
+      if (hasAfternoon && o.value === 'ลาครึ่งบ่าย') o.disabled = true;
+    });
+  }
+  if (obSel) {
+    Array.from(obSel.options).forEach(o => {
+      o.disabled = false;
+      if (hasFull && o.value !== '') o.disabled = true;
+      if (hasMorning && o.value === 'ครึ่งเช้า') o.disabled = true;
+      if (hasAfternoon && o.value === 'ครึ่งบ่าย') o.disabled = true;
+    });
+  }
+}
+
+document.querySelectorAll('.action-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    const action = btn.dataset.action;
+    if (state.selectedAction === action) {
+      state.selectedAction = null; btn.classList.remove('active');
+      document.getElementById('reasonSection').classList.remove('visible');
+      return;
+    }
+    document.querySelectorAll('.action-btn').forEach(b => { if (!b.disabled) b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.selectedAction = action;
+    const reasonSec = document.getElementById('reasonSection');
+    const leaveOpts = document.getElementById('leaveOptions');
+    const gpsEl = document.getElementById('gpsStatus');
+    
+    if (action === 'ลา') {
+      reasonSec.classList.add('visible');
+      leaveOpts.style.display = 'block';
+      document.getElementById('obOptions').style.display = 'none';
+      gpsEl.style.display = 'none';
+      if (datePickers['leaveStartDate']) datePickers['leaveStartDate'].setDate(new Date());
+      if (datePickers['leaveEndDate']) datePickers['leaveEndDate'].setDate(new Date());
+      handleLeaveTypeChange();
+    } else if (action === 'ไปราชการ') {
+      reasonSec.classList.add('visible');
+      leaveOpts.style.display = 'none';
+      document.getElementById('obOptions').style.display = 'block';
+      gpsEl.style.display = 'none';
+      if (datePickers['leaveStartDate']) datePickers['leaveStartDate'].setDate(new Date());
+      if (datePickers['leaveEndDate']) datePickers['leaveEndDate'].setDate(new Date());
+      handleObTypeChange();
+    } else {
+      document.getElementById('obOptions').style.display = 'none';
+      reasonSec.classList.remove('visible');
+      document.getElementById('reasonInput').value = '';
+      gpsEl.style.display = 'flex';
+      await checkGPS();
+    }
+  });
+});
+
+function handleLeaveTypeChange() {
+  const type = document.getElementById('leaveTypeSelect').value;
+  const dateRange = document.getElementById('dateRangeDiv');
+  if (type === 'ลาทั้งวัน') {
+    dateRange.style.display = 'grid';
+    if (datePickers['leaveStartDate'] && !datePickers['leaveStartDate'].input.value) datePickers['leaveStartDate'].setDate(new Date());
+    if (datePickers['leaveEndDate'] && !datePickers['leaveEndDate'].input.value) datePickers['leaveEndDate'].setDate(new Date());
+  } else {
+    dateRange.style.display = 'none';
+  }
+}
+function handleObTypeChange() {
+  const type = document.getElementById('obTypeSelect').value;
+  const dateRange = document.getElementById('dateRangeDiv');
+  if (type === '') {
+    dateRange.style.display = 'grid';
+    if (datePickers['leaveStartDate'] && !datePickers['leaveStartDate'].input.value) datePickers['leaveStartDate'].setDate(new Date());
+    if (datePickers['leaveEndDate'] && !datePickers['leaveEndDate'].input.value) datePickers['leaveEndDate'].setDate(new Date());
+  } else {
+    dateRange.style.display = 'none';
+  }
+}
+document.getElementById('leaveTypeSelect').addEventListener('change', handleLeaveTypeChange);
+document.getElementById('obTypeSelect').addEventListener('change', handleObTypeChange);
+
+async function checkGPS() {
+  const gpsEl = document.getElementById('gpsStatus');
+  gpsEl.className = 'gps-status loading';
+  gpsEl.innerHTML = '<span>⏳</span><span>กำลังตรวจสอบตำแหน่ง...</span>';
+  try {
+    const pos = await refreshPosition();
+    const dist = haversine(pos.lat, pos.lng, state.settings.officeLat, state.settings.officeLng);
+    if (dist <= state.settings.radius) {
+      gpsEl.className = 'gps-status ok';
+      gpsEl.innerHTML = `<span>✅</span><span>อยู่ในพื้นที่ (${Math.round(dist)} ม.)</span>`;
+    } else {
+      gpsEl.className = 'gps-status bad';
+      gpsEl.innerHTML = `<span>❌</span><span>อยู่นอกพื้นที่ (${Math.round(dist)} ม.)</span>`;
+    }
+  } catch (err) {
+    gpsEl.className = 'gps-status bad';
+    gpsEl.innerHTML = `<span>❌</span><span>${esc(err.message)}</span>`;
+  }
+}
+
+document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!state.selectedAction) return toast('เลือกประเภทการลงเวลา', 'error');
+  const reason = document.getElementById('reasonInput').value.trim();
+  const note = document.getElementById('noteInput').value.trim();
+  const isLeaveOrOB = (state.selectedAction === 'ลา' || state.selectedAction === 'ไปราชการ');
+  if (isLeaveOrOB && !reason) return toast('กรุณาระบุเหตุผล', 'error');
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+  try {
+    let pos = { lat: 0, lng: 0 };
+    if (!isLeaveOrOB) pos = await getFreshPosition();
+    const payload = { action: state.selectedAction, reason, note, lat: pos.lat, lng: pos.lng };
+    if (state.selectedAction === 'ลา') {
+      payload.leaveType = document.getElementById('leaveTypeSelect').value;
+      if (payload.leaveType === 'ลาทั้งวัน') {
+        payload.startDate = datePickers['leaveStartDate'] ? datePickers['leaveStartDate'].input.value : document.getElementById('leaveStartDate').value;
+        payload.endDate = datePickers['leaveEndDate'] ? datePickers['leaveEndDate'].input.value : document.getElementById('leaveEndDate').value;
+      }
+    }
+    if (state.selectedAction === 'ไปราชการ') {
+      const sub = document.getElementById('obTypeSelect').value;
+      payload.leaveType = sub;
+      if (sub === '') {
+        payload.startDate = datePickers['leaveStartDate'] ? datePickers['leaveStartDate'].input.value : document.getElementById('leaveStartDate').value;
+        payload.endDate = datePickers['leaveEndDate'] ? datePickers['leaveEndDate'].input.value : document.getElementById('leaveEndDate').value;
+      }
+    }
+    const res = await api('attendance', payload);
+    if (res.success) {
+      toast(res.message);
+      document.getElementById('attendanceForm').reset();
+      document.getElementById('reasonSection').classList.remove('visible');
+      document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+      state.selectedAction = null;
+      // ⚡ real-time: force refetch ทันที + delayed refetch อีก 2 จังหวะ เพื่อจับ server processing lag
+      invalidateAllReportCaches();
+      loadDailyReport(true);
+      checkTodayStatus(true);
+      if (isManager()) checkPendingCounts(true);
+      [600, 1800].forEach(delay => {
+        setTimeout(() => {
+          invalidateAllReportCaches();
+          loadDailyReport(true);
+          checkTodayStatus(true);
+        }, delay);
+      });
+    } else {
+      toast(res.message, 'error');
+      checkTodayStatus(true);
+    }
+  } catch (err) { toast(err.message, 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '📍 บันทึกข้อมูล'; }
+});
+
+function getInitials(name) {
+  if(!name) return "?";
+  let parts = name.trim().split(" ");
+  if(parts.length >= 2) return parts[0].charAt(0) + parts[1].charAt(0);
+  return name.charAt(0);
+}
+
+function avatarFor(picSrc, name) {
+  const initials = esc(getInitials(name));
+  const fallback = `<div style="display:none; width:32px; height:32px; border-radius:50%; background:var(--bg-pattern); border:2px solid var(--border-color); align-items:center; justify-content:center; font-weight:700; color:var(--text-main); margin-right:8px; box-shadow:var(--glow-primary); flex-shrink:0;">${initials}</div>`;
+  if (picSrc) {
+    return `<img src="${esc(picSrc)}" class="avatar-xs" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">${fallback}`;
+  }
+  return `<div style="width:32px; height:32px; border-radius:50%; background:var(--bg-pattern); border:2px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--text-main); margin-right:8px; box-shadow:var(--glow-primary); flex-shrink:0;">${initials}</div>`;
+}
+
+function avatarForMobile(picSrc, firstName) {
+  const initials = esc(getInitials(firstName));
+  if (picSrc) {
+    return `<div class="cell-name-mobile">
+      <img src="${esc(picSrc)}" class="avatar-xs" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div style="display:none; width:30px; height:30px; border-radius:50%; background:var(--bg-pattern); border:2px solid var(--border-color); align-items:center; justify-content:center; font-weight:700; color:var(--text-main); font-size:0.65rem; flex-shrink:0;">${initials}</div>
+      <span class="cell-label">${esc(firstName)}</span>
+    </div>`;
+  }
+  return `<div class="cell-name-mobile">
+    <div style="width:30px; height:30px; border-radius:50%; background:var(--bg-pattern); border:2px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--text-main); font-size:0.65rem; flex-shrink:0;">${initials}</div>
+    <span class="cell-label">${esc(firstName)}</span>
+  </div>`;
+}
+
+function getDisplayTime(time, note, type) {
+  let timeStr = time && time !== '-' ? time : '-';
+  if (type === 'in') {
+    if (note.includes('ลาครึ่งเช้า')) return timeStr !== '-' ? `ลา, ${timeStr}` : 'ลา';
+    if (note.includes('ไปราชการครึ่งเช้า')) return timeStr !== '-' ? `ไปราชการ, ${timeStr}` : 'ไปราชการ';
+    if (note.includes('ลาทั้งวัน') || note === 'ลา') return 'ลา';
+    if (note.includes('ไปราชการ') && !note.includes('ครึ่ง')) return 'ไปราชการ';
+  }
+  if (type === 'out') {
+    if (note.includes('ลาครึ่งบ่าย')) return timeStr !== '-' ? `ลา, ${timeStr}` : 'ลา';
+    if (note.includes('ไปราชการครึ่งบ่าย')) return timeStr !== '-' ? `ไปราชการ, ${timeStr}` : 'ไปราชการ';
+    if (note.includes('ลาทั้งวัน') || note === 'ลา') return 'ลา';
+    if (note.includes('ไปราชการ') && !note.includes('ครึ่ง')) return 'ไปราชการ';
+  }
+  return timeStr;
+}
+
+function getDisplayNote(note) {
+  if (!note) return '-';
+  if (note.includes('รออนุมัติ')) return note;
+  const parts = note.split(':');
+  return parts.length > 1 ? parts[1].trim() : '-';
+}
+
+function renderDailyReport(records) {
+  const tbody = document.getElementById('dailyReportBody');
+  if (!tbody) return;
+  if (!records || records.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted)">ไม่มีข้อมูลในวันนี้</td></tr>';
+    return;
+  }
+  const isMobile = window.innerWidth <= 600;
+  tbody.innerHTML = records.map(r => {
+    const picSrc = r.profilePic || (state.user && state.user.fullName === r.fullName ? state.user.profilePic : null);
+    const nameCell = isMobile
+      ? avatarForMobile(picSrc, getFirstName(r.fullName))
+      : `${avatarFor(picSrc, r.fullName)} ${esc(getFirstName(r.fullName))}`;
+      
+    const inDisplay = getDisplayTime(r.inTime, r.note, 'in');
+    const outDisplay = getDisplayTime(r.outTime, r.note, 'out');
+    const noteDisplay = getDisplayNote(r.note);
+
+    return `
+      <tr>
+        <td class="table-name" style="${isMobile ? 'text-align:center;' : ''}">${nameCell}</td>
+        <td style="color:var(--success);font-weight:700;text-align:center">${inDisplay}</td>
+        <td style="color:var(--danger);font-weight:700;text-align:center">${outDisplay}</td>
+        <td>${esc(noteDisplay)}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function loadDailyReport(force = false, isPolling = false) {
+  const dd = datePickers['dailyDate'];
+  if (!dd) {
+    const nativeInput = document.getElementById('dailyDate');
+    if (!nativeInput || !nativeInput.value) return;
+    const parts = nativeInput.value.split('-');
+    if (parts.length === 3) {
+       const currentVal = `${parts[2]}/${parts[1]}/${parts[0]}`;
+       const res = await api('getDailyReport', { date: currentVal });
+       if (res.success) renderDailyReport(res.records);
+    }
+    return;
+  }
+
+  if (!dd.selectedDates || dd.selectedDates.length === 0) return;
+
+  const selectedDate = dd.selectedDates[0];
+  const yyyy = selectedDate.getFullYear();
+  const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(selectedDate.getDate()).padStart(2, '0');
+  const currentVal = `${day}/${mm}/${yyyy}`;
+
+  const cacheKey = currentVal;
+  if (state.dailyLoadingKey === cacheKey) return;
+  const cached = state.dailyReportCache[cacheKey];
+  const cacheAge = cached ? (Date.now() - cached.ts) : Infinity;
+  const isStale = cacheAge > CACHE_TTL_DAILY;
+  const needsFetch = force || !cached || isStale;
+
+  if (cached) {
+    if (!isPolling) renderDailyReport(cached.data);
+    if (!needsFetch && !isPolling) return;
+  } else if (!isPolling) {
+    document.getElementById('dailyReportBody').innerHTML = `
+      <tr class="skeleton-row"><td>Loading Data</td><td>--:--</td><td>--:--</td><td>Loading...</td></tr>
+      <tr class="skeleton-row"><td>Loading Data</td><td>--:--</td><td>--:--</td><td>Loading...</td></tr>`;
+  }
+  state.dailyLoadingKey = cacheKey;
+  try {
+    const res = await api('getDailyReport', { date: currentVal });
+    if (dd.selectedDates[0] !== selectedDate) return;
+    if (!res.success) {
+      if (!cached && !isPolling) {
+        document.getElementById('dailyReportBody').innerHTML =
+          `<tr><td colspan="4" style="text-align:center;color:var(--danger)">${esc(res.message)}</td></tr>`;
+      }
+      return;
+    }
+    const records = res.records || [];
+    const newHash = JSON.stringify(records);
+    const oldHash = cached ? JSON.stringify(cached.data) : '';
+    state.dailyReportCache[cacheKey] = { data: records, ts: Date.now() };
+    if (newHash !== oldHash || !isPolling) renderDailyReport(records);
+  } finally {
+    if (state.dailyLoadingKey === cacheKey) state.dailyLoadingKey = null;
+  }
+}
+
+document.getElementById('reportYear').addEventListener('change', () => loadReports());
+document.getElementById('reportTerm').addEventListener('change', () => loadReports());
+document.getElementById('reportMonth').addEventListener('change', () => loadReports());
+
+function renderReportsTable(records) {
+  const tbody = document.getElementById('termReportBody');
+  state.currentReportRecords = records || [];
+
+  if (!records || records.length === 0) {
+    const cols = isManager() ? 5 : 4;
+    tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center;color:var(--text-muted)">ไม่มีข้อมูลในช่วงเวลานี้</td></tr>`;
+    return;
+  }
+
+  const mgr = isManager();
+
+  const sorted = records.slice().sort((a, b) => {
+    const msA = dmyToMsClient(a.date);
+    const msB = dmyToMsClient(b.date);
+    if (msA !== msB) return msA - msB;
+    
+    const inA = a.inTime && a.inTime !== '-' ? a.inTime : '99:99';
+    const inB = b.inTime && b.inTime !== '-' ? b.inTime : '99:99';
+    if (inA !== inB) return inA.localeCompare(inB);
+
+    return (a.name || '').localeCompare(b.name || '');
+  });
+
+  const latestMs = Math.max(...sorted.map(r => dmyToMsClient(r.date)));
+  const latestDateStr = sorted.find(r => dmyToMsClient(r.date) === latestMs)?.date || '';
+
+  state.currentReportRecords = sorted;
+
+  const isMobile = window.innerWidth <= 600;
+
+  tbody.innerHTML = sorted.map((r, i) => {
+    const picSrc = r.profilePic || (state.user && state.user.fullName === r.name ? state.user.profilePic : null);
+    const displayName = getFirstName(r.name);
+    const isLatest = (r.date === latestDateStr);
+    const rowClass = isLatest ? 'row-latest-day' : '';
+    const latestLabel = isLatest ? '<span class="latest-day-label">ล่าสุด</span>' : '';
+
+    let firstColHtml;
+    if (isMobile) {
+      if (mgr) {
+        firstColHtml = `
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+            ${avatarForMobile(picSrc, displayName)}
+            <span style="font-size:0.65rem;color:var(--text-muted);text-align:center;">${esc(r.date)}</span>
+          </div>`;
+      } else {
+        firstColHtml = `<span style="font-size:0.75rem;font-weight:700;">${esc(r.date)}</span>`;
+      }
+    } else {
+      if (mgr) {
+        firstColHtml = `
+          <div style="display:flex; align-items:center; margin-bottom:4px;">
+            ${avatarFor(picSrc, r.name)} <b>${esc(displayName)}</b>${latestLabel}
+          </div>
+          <span style="font-size:0.75rem;color:var(--text-muted); margin-left:40px;">${esc(r.date)}</span>`;
+      } else {
+        firstColHtml = `<b>${esc(r.date)}</b>${latestLabel}`;
+      }
+    }
+
+    const inDisplay = getDisplayTime(r.inTime, r.note, 'in');
+    const outDisplay = getDisplayTime(r.outTime, r.note, 'out');
+    const noteDisplay = getDisplayNote(r.note);
+
+    return `
+      <tr class="${rowClass}" data-date="${esc(r.date)}">
+        <td style="${isMobile && mgr ? 'text-align:center;' : ''}">${firstColHtml}</td>
+        <td style="color:var(--success);font-weight:700;text-align:center;">${inDisplay}</td>
+        <td style="color:var(--danger);font-weight:700;text-align:center;">${outDisplay}</td>
+        <td style="font-size:${isMobile ? '0.7rem' : '0.85rem'};">${esc(noteDisplay)}</td>
+        ${mgr ? `<td style="text-align:center;"><button class="btn-sm btn-warning" style="${isMobile ? 'padding:4px 6px;font-size:0.7rem;' : ''}" onclick="openEditAttendanceByIdx(${i})">✏️${isMobile ? '' : ' แก้ไข'}</button></td>` : ''}
+      </tr>`;
+  }).join('');
+
+  setTimeout(() => {
+    const wrap = document.getElementById('reportsTableWrap');
+    if (!wrap) return;
+    const firstLatestRow = tbody.querySelector(`tr[data-date="${latestDateStr}"]`);
+    if (firstLatestRow) {
+      const theadHeight = wrap.querySelector('thead') ? wrap.querySelector('thead').offsetHeight : 0;
+      const wrapRect = wrap.getBoundingClientRect();
+      const rowRect = firstLatestRow.getBoundingClientRect();
+      const targetScroll = wrap.scrollTop + (rowRect.top - wrapRect.top) - theadHeight;
+      wrap.scrollTop = targetScroll;
+    } else {
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+  }, 100);
+}
+
+async function loadReports(force = false, isPolling = false) {
+  const year = document.getElementById('reportYear').value.trim();
+  const term = document.getElementById('reportTerm').value;
+  const month = document.getElementById('reportMonth').value;
+  if (!year || !term) {
+    if (!isPolling) document.getElementById('termReportBody').innerHTML =
+      '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">กรุณาระบุปีการศึกษา</td></tr>';
+    return;
+  }
+  const cacheKey = `${year}|${term}|${month}`;
+  if (state.reportsLoadingKey === cacheKey) return;
+  const cached = state.reportsCache[cacheKey];
+  const cacheAge = cached ? (Date.now() - cached.ts) : Infinity;
+  const isStale = cacheAge > CACHE_TTL_REPORTS;
+  const needsFetch = force || !cached || isStale;
+
+  if (cached) {
+    if (!isPolling) { renderReportsTable(cached.data); updateCacheIndicator(cached.ts); }
+    if (!needsFetch && !isPolling) return;
+  } else if (!isPolling) {
+    document.getElementById('termReportBody').innerHTML = `
+      <tr class="skeleton-row"><td>Loading Data</td><td>--:--</td><td>--:--</td><td>Loading...</td><td></td></tr>
+      <tr class="skeleton-row"><td>Loading Data</td><td>--:--</td><td>--:--</td><td>Loading...</td><td></td></tr>`;
+    updateCacheIndicator(null);
+  }
+  state.reportsLoadingKey = cacheKey;
+  try {
+    const res = await api('getReports', { year, term, month });
+    const currentKey = `${document.getElementById('reportYear').value.trim()}|${document.getElementById('reportTerm').value}|${document.getElementById('reportMonth').value}`;
+    if (currentKey !== cacheKey) return;
+    if (!res.success) {
+      if (!cached && !isPolling) {
+        document.getElementById('termReportBody').innerHTML =
+          `<tr><td colspan="5" style="text-align:center;color:var(--danger)">${esc(res.message)}</td></tr>`;
+      }
+      return;
+    }
+    const records = res.records || [];
+    const newHash = JSON.stringify(records);
+    const oldHash = cached ? JSON.stringify(cached.data) : '';
+    state.reportsCache[cacheKey] = { data: records, ts: Date.now() };
+    if (newHash !== oldHash || !isPolling) {
+      renderReportsTable(records);
+      updateCacheIndicator(Date.now());
+    }
+  } finally {
+    if (state.reportsLoadingKey === cacheKey) state.reportsLoadingKey = null;
+  }
+}
+
+function updateCacheIndicator(ts) {
+  const el = document.getElementById('reportsCacheIndicator');
+  if (!el) return;
+  if (!ts) { el.style.display = 'none'; return; }
+  const ageSec = Math.floor((Date.now() - ts) / 1000);
+  const ageStr = ageSec < 60 ? `${ageSec}วิ` : `${Math.floor(ageSec/60)}นาที`;
+  el.textContent = `⚡ แคช ${ageStr}`;
+  el.style.display = 'inline-flex';
+}
+
+function openEditAttendanceByIdx(i) {
+  const r = state.currentReportRecords[i];
+  if (!r) return;
+  document.getElementById('editAttName').value = r.name;
+  document.getElementById('editAttOrigDate').value = r.date;
+  document.getElementById('editAttNameDisplay').value = r.name;
+  
+  if (datePickers['editAttDate']) {
+    const parsedDate = thaiDateStrToDate(r.date);
+    datePickers['editAttDate'].setDate(parsedDate || new Date());
+  } else {
+    document.getElementById('editAttDate').value = r.date;
+  }
+  
+  document.getElementById('editAttInTime').value = r.inTime;
+  document.getElementById('editAttOutTime').value = r.outTime;
+  document.getElementById('editAttNote').value = (r.note && r.note !== '-') ? r.note : '';
+  document.getElementById('editAttendanceModal').classList.add('show');
+}
+function closeEditAttendanceModal() {
+  document.getElementById('editAttendanceModal').classList.remove('show');
+}
+function afterAttendanceEdited() {
+  invalidateAllReportCaches();
+  Promise.all([loadReports(true), loadDailyReport(true), checkTodayStatus(true)]).catch(() => {});
+}
+async function saveEditAttendance() {
+  const btn = document.getElementById('saveEditAttBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+  const payload = {
+    name: document.getElementById('editAttName').value,
+    origDate: document.getElementById('editAttOrigDate').value,
+    newDate: datePickers['editAttDate'] ? datePickers['editAttDate'].input.value : document.getElementById('editAttDate').value,
+    inTime: document.getElementById('editAttInTime').value.trim(),
+    outTime: document.getElementById('editAttOutTime').value.trim(),
+    note: document.getElementById('editAttNote').value,
+    year: document.getElementById('reportYear').value.trim(),
+    term: document.getElementById('reportTerm').value
+  };
+  const res = await api('admin_editAttendance', payload);
+  btn.disabled = false; btn.textContent = 'บันทึก';
+  if (res.success) {
+    toast(res.message);
+    closeEditAttendanceModal();
+    afterAttendanceEdited();
+  } else {
+    toast(res.message, 'error');
+    if (/ไม่พบข้อมูลเดิม/.test(res.message || '')) { closeEditAttendanceModal(); afterAttendanceEdited(); }
+  }
+}
+async function deleteEditAttendance() {
+  const name = document.getElementById('editAttName').value;
+  const date = document.getElementById('editAttOrigDate').value;
+  if (!confirm(`ลบรายการของ ${name} วันที่ ${date} ?`)) return;
+  const btn = document.getElementById('deleteEditAttBtn');
+  btn.disabled = true;
+  const res = await api('admin_deleteAttendance', {
+    name, origDate: date,
+    year: document.getElementById('reportYear').value.trim(),
+    term: document.getElementById('reportTerm').value
+  });
+  btn.disabled = false;
+  if (res.success) { toast(res.message); closeEditAttendanceModal(); afterAttendanceEdited(); }
+  else { toast(res.message, 'error'); closeEditAttendanceModal(); afterAttendanceEdited(); }
+}
+
+function openPdfModal() {
+  const rMonth = document.getElementById('reportMonth').value;
+  document.getElementById('pdfMonthSelect').value = rMonth;
+  document.getElementById('pdfModal').classList.add('show');
+}
+function closePdfModal() { document.getElementById('pdfModal').classList.remove('show'); }
+
+async function downloadPdf() {
+  const monthVal = document.getElementById('pdfMonthSelect').value;
+  const academicYear = document.getElementById('reportYear').value.trim();
+  if (!monthVal) return toast('กรุณาเลือกเดือน', 'error');
+  const btn = document.getElementById('confirmPdfBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังสร้าง...';
+  const res = await api('exportPDF', { monthStr: monthVal, academicYear: academicYear });
+  btn.disabled = false; btn.textContent = 'ดาวน์โหลด';
+  if (res.success) {
+    if (res.downloadUrl) {
+      window.open(res.downloadUrl, '_blank');
+    } else if (res.pdfBase64) {
+      const byteChars = atob(res.pdfBase64);
+      const bytes = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = res.fileName || `Report_${monthVal}_${academicYear}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    }
+    toast('ดาวน์โหลด PDF สำเร็จ');
+    closePdfModal();
+  } else {
+    toast(res.message || 'เกิดข้อผิดพลาดในการสร้าง PDF', 'error');
+  }
+}
+document.getElementById('exportPdfBtn').addEventListener('click', openPdfModal);
+
+function updateProfileUI() {
+  if(!state.user) return;
+  document.getElementById('profUsername').value = state.user.username;
+  document.getElementById('profFullName').value = state.user.fullName;
+  const validPositions = ['ครู', 'ผอ.', 'พนักงาน', 'ลูกจ้าง'];
+  const profPosSelect = document.getElementById('profPosition');
+  profPosSelect.value = validPositions.includes(state.user.position) ? state.user.position : 'ครู';
+  const canPickDirector = isManager();
+  Array.from(profPosSelect.options).forEach(o => { if (o.value === 'ผอ.') o.disabled = !canPickDirector; });
+  document.getElementById('profEmail').value = state.user.email || '';
+  document.getElementById('profilePicPreview').src = state.user.profilePic || 'https://via.placeholder.com/100';
+  const sigPreview = document.getElementById('sigPreview');
+  if (state.user.signature) { sigPreview.src = state.user.signature; sigPreview.style.display = 'inline-block'; }
+  else { sigPreview.style.display = 'none'; }
+}
+
+function handleImageUpload(inputId, callback) {
+  document.getElementById(inputId).addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 400;
+        const scale = Math.min(1, MAX_WIDTH / img.width);
+        canvas.width = img.width * scale; canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        callback(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+handleImageUpload('profilePicInput', (dataUrl) => {
+  state.profilePicBase64 = dataUrl;
+  document.getElementById('profilePicPreview').src = dataUrl;
+});
+handleImageUpload('sigInput', (dataUrl) => {
+  state.signatureBase64 = dataUrl;
+  const sigPreview = document.getElementById('sigPreview');
+  sigPreview.src = dataUrl; sigPreview.style.display = 'inline-block';
+});
+
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('saveProfileBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> บันทึก...';
+  const payload = {
+    username: document.getElementById('profUsername').value.trim().toLowerCase(),
+    fullName: document.getElementById('profFullName').value.trim(),
+    position: document.getElementById('profPosition').value,
+    email: document.getElementById('profEmail').value.trim(),
+    profilePicBase64: state.profilePicBase64,
+    signatureBase64: state.signatureBase64
+  };
+  const res = await api('updateProfile', payload);
+  btn.disabled = false; btn.textContent = '💾 บันทึกข้อมูล';
+  if (res.success) {
+    toast('บันทึกข้อมูลสำเร็จ');
+    state.user = res.user;
+    if (localStorage.getItem('tt_token')) localStorage.setItem('tt_user', JSON.stringify(res.user));
+    state.profilePicBase64 = null; state.signatureBase64 = null;
+    clearAllCaches();
+    await initUserSession();
+    updateProfileUI();
+  } else toast(res.message, 'error');
+});
+
+document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('savePwBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังเปลี่ยน...';
+  const r = await api('changePassword', { oldPassword: document.getElementById('oldPw').value, newPassword: document.getElementById('newPw').value });
+  btn.disabled = false; btn.textContent = 'เปลี่ยนรหัสผ่าน';
+  if (r.success) { toast(r.message); document.getElementById('passwordForm').reset(); }
+  else toast(r.message, 'error');
+});
+
+function activateAdminTab(name) {
+  document.querySelectorAll('#adminScreen .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('#adminScreen .tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(name + 'Tab').classList.add('active');
+  if (name === 'pending') loadPending();
+  if (name === 'leaves') loadPendingLeaves();
+  if (name === 'users') loadUsers();
+  if (name === 'settings') loadAdminSettings();
+}
+document.getElementById('adminBtn').addEventListener('click', () => {
+  showScreen('adminScreen');
+  const admin = isAdminRole();
+  document.querySelectorAll('#adminScreen .tab').forEach(t => {
+    t.style.display = (admin || t.dataset.tab === 'leaves') ? '' : 'none';
+  });
+  activateAdminTab(admin ? 'pending' : 'leaves');
+});
+document.querySelectorAll('#adminScreen .tab').forEach(tab => {
+  tab.addEventListener('click', () => activateAdminTab(tab.dataset.tab));
+});
+
+async function loadPending() {
+  const box = document.getElementById('pendingList');
+  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  const res = await api('admin_listPending');
+  if (!res.success) { box.innerHTML = `<div class="empty-state">${esc(res.message)}</div>`; return; }
+  if (res.users.length === 0) return box.innerHTML = '<div class="empty-state">ไม่มีผู้ใช้รออนุมัติ 🎉</div>';
+  box.innerHTML = res.users.map(u => `
+    <div id="pending-${esc(u.username)}" style="padding:14px;background:var(--bg-color);border-radius:12px;border:2px solid var(--border-color); box-shadow: 2px 2px 0 var(--border-color);">
+      <div style="font-weight:700;font-size:1rem;">${esc(u.fullName)} <span style="color:var(--text-muted);font-size:.8rem;font-weight:500;">@${esc(u.username)}</span></div>
+      <div style="color:var(--text-muted);font-size:.8rem;margin-top:4px;font-weight:500;">${esc(u.registeredAt)} · ระยะ ${esc(u.regDistance)} ม.</div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn-sm btn-emerald" style="flex:1" onclick="approveUser('${esc(u.username)}')">✓ อนุมัติ</button>
+        <button class="btn-sm btn-danger" style="flex:1" onclick="rejectUser('${esc(u.username)}')">✕ ปฏิเสธ</button>
+      </div>
+    </div>`).join('');
+}
+window.approveUser = async (u) => {
+  const el = document.getElementById(`pending-${u}`);
+  if (el) el.style.display = 'none';
+  const r = await api('admin_approve', {username:u});
+  toast(r.message, r.success?'success':'error');
+  if (!r.success && el) el.style.display = 'block';
+  if (r.success) checkPendingCounts(true);
+};
+window.rejectUser = async (u) => {
+  const el = document.getElementById(`pending-${u}`);
+  if (el) el.style.display = 'none';
+  const r = await api('admin_reject', {username:u});
+  toast(r.message, r.success?'success':'error');
+  if (!r.success && el) el.style.display = 'block';
+  if (r.success) checkPendingCounts(true);
+};
+
+async function loadPendingLeaves() {
+  const box = document.getElementById('leavesList');
+  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  const res = await api('admin_getPendingLeaves');
+  if (!res.success) { box.innerHTML = `<div class="empty-state">${esc(res.message)}</div>`; return; }
+  if (res.leaves.length === 0) return box.innerHTML = '<div class="empty-state">ไม่มีรายการลารออนุมัติ 🎉</div>';
+  box.innerHTML = res.leaves.map(l => `
+    <div id="leave-${esc(l.id)}" style="padding:14px;background:var(--bg-color);border-radius:12px;border:2px solid var(--border-color); box-shadow: 2px 2px 0 var(--border-color);">
+      <div style="font-weight:700;font-size:1rem;">${esc(l.fullName)} <span style="color:var(--text-muted);font-size:.8rem;font-weight:500;">@${esc(l.username)}</span></div>
+      <div style="color:var(--primary);font-size:.85rem;font-weight:700;margin-top:4px;">ประเภท: ${esc(l.type)}</div>
+      <div style="color:var(--text-muted);font-size:.8rem;margin-top:4px;font-weight:500;">${esc(l.startDate)} ถึง ${esc(l.endDate)} · เหตุผล: ${esc(l.reason)}</div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="btn-sm btn-emerald" style="flex:1" onclick="approveLeave('${esc(l.id)}')">✓ อนุมัติ (ผอ.)</button>
+        <button class="btn-sm btn-danger" style="flex:1" onclick="rejectLeave('${esc(l.id)}')">✕ ปฏิเสธ</button>
+      </div>
+    </div>`).join('');
+}
+async function handleLeaveDecision(cmd, id) {
+  const el = document.getElementById(`leave-${id}`);
+  if (el) el.style.display = 'none';
+  const r = await api(cmd, {id:id});
+  toast(r.message, r.success?'success':'error');
+  if (r.success) { invalidateAllReportCaches(); checkPendingCounts(true); }
+  else loadPendingLeaves();
+}
+window.approveLeave = (id) => handleLeaveDecision('admin_approveLeave', id);
+window.rejectLeave  = (id) => handleLeaveDecision('admin_rejectLeave', id);
+
+async function loadUsers() {
+  const box = document.getElementById('usersList');
+  box.innerHTML = '<div class="empty-state">กำลังโหลด...</div>';
+  const res = await api('admin_listUsers');
+  if (!res.success) { box.innerHTML = `<div class="empty-state">${esc(res.message)}</div>`; return; }
+  state.adminUsers = res.users;
+  box.innerHTML = res.users.map((u, i) => `
+    <div class="user-row">
+      <div class="user-row-info">
+        ${avatarFor(u.profilePic || null, u.fullName)}
+        <div style="flex:1; min-width:0;">
+          <div class="user-name" style="font-weight:700;font-size:.95rem">${esc(u.fullName)}</div>
+          <div class="user-desc" style="color:var(--text-muted);font-size:.75rem;margin-top:2px;">@${esc(u.username)} · ${esc(u.position || 'ครู')} · ${esc(u.status)} ${u.gpsOverride === 'true' ? '<span style="color:var(--success); font-weight:700;">(นอกรัศมีได้)</span>' : ''}</div>
+        </div>
+      </div>
+      <button class="btn-sm btn-cyan" onclick="openEditUserByIdx(${i})">✏️ แก้ไข</button>
+    </div>`).join('');
+}
+function openEditUserByIdx(i) {
+  const u = state.adminUsers[i];
+  if (!u) return;
+  openEditUser(u.username, u.fullName, u.role, u.status, u.position, u.email, u.gpsOverride);
+}
+function openEditUser(username, fullName, role, status, position, email, gpsOverride) {
+  document.getElementById('editTargetUsername').value = username;
+  document.getElementById('editUserUsername').value = username;
+  document.getElementById('editUserFullName').value = fullName;
+  document.getElementById('editUserRole').value = role;
+  document.getElementById('editUserStatus').value = status;
+  const validPositions = ['ครู', 'ผอ.', 'พนักงาน', 'ลูกจ้าง'];
+  const editPosSelect = document.getElementById('editUserPosition');
+  editPosSelect.value = validPositions.includes(position) ? position : 'ครู';
+  const gpsCheck = document.getElementById('editUserGpsOverride');
+  if (editPosSelect.value === 'ผอ.') { gpsCheck.checked = true; gpsCheck.disabled = true; }
+  else { gpsCheck.checked = (gpsOverride === 'true'); gpsCheck.disabled = false; }
+  document.getElementById('editUserEmail').value = email || '';
+  document.getElementById('editUserPassword').value = '';
+  document.getElementById('editUserPicInput').value = '';
+  document.getElementById('editUserSigInput').value = '';
+  state.editUserPicBase64 = null;
+  state.editUserSigBase64 = null;
+  document.getElementById('editUserModal').classList.add('show');
+}
+document.getElementById('editUserPosition').addEventListener('change', function() {
+  const gpsCheck = document.getElementById('editUserGpsOverride');
+  if (this.value === 'ผอ.') { gpsCheck.checked = true; gpsCheck.disabled = true; }
+  else gpsCheck.disabled = false;
+});
+function closeEditUserModal() { document.getElementById('editUserModal').classList.remove('show'); }
+handleImageUpload('editUserPicInput', (dataUrl) => { state.editUserPicBase64 = dataUrl; });
+handleImageUpload('editUserSigInput', (dataUrl) => { state.editUserSigBase64 = dataUrl; });
+async function saveEditUser() {
+  const btn = document.getElementById('saveEditUserBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+  const payload = {
+    targetUsername: document.getElementById('editTargetUsername').value,
+    fullName: document.getElementById('editUserFullName').value.trim(),
+    role: document.getElementById('editUserRole').value,
+    status: document.getElementById('editUserStatus').value,
+    position: document.getElementById('editUserPosition').value,
+    gpsOverride: document.getElementById('editUserGpsOverride').checked,
+    email: document.getElementById('editUserEmail').value.trim(),
+    newPassword: document.getElementById('editUserPassword').value,
+    profilePicBase64: state.editUserPicBase64,
+    signatureBase64: state.editUserSigBase64
+  };
+  const res = await api('admin_updateUser', payload);
+  btn.disabled = false; btn.textContent = 'บันทึก';
+  if (res.success) {
+    toast(res.message);
+    closeEditUserModal();
+    invalidateAllReportCaches();
+    loadUsers();
+  } else {
+    toast(res.message, 'error');
+  }
+}
+
+async function loadAdminSettings() {
+  const s = await api('getSettings');
+  if (!s.success) return toast(s.message, 'error');
+  state.settings = { ...state.settings, ...s.settings };
+  fillSettingsForm(s.settings);
+}
+
+document.getElementById('btnUseCurrentGps').addEventListener('click', async () => {
+  const btn = document.getElementById('btnUseCurrentGps');
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังค้นหา...';
+  try {
+    const pos = await refreshPosition();
+    document.getElementById('setOfficeLat').value = pos.lat.toFixed(6);
+    document.getElementById('setOfficeLng').value = pos.lng.toFixed(6);
+    toast('ดึงพิกัดสำเร็จ!');
+  } catch (err) { toast(err.message, 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
+});
+
+document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveSettingsBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+  const payload = {
+    officeName: document.getElementById('setOfficeName').value.trim(),
+    officeLat: Number(document.getElementById('setOfficeLat').value),
+    officeLng: Number(document.getElementById('setOfficeLng').value),
+    radius: Number(document.getElementById('setRadius').value),
+    strictRegistration: document.getElementById('setStrictReg').checked,
+    academicYear: document.getElementById('setAcademicYear').value.trim(),
+    term1Start: datePickers['setT1Start'] ? datePickers['setT1Start'].input.value : document.getElementById('setT1Start').value,
+    term1End: datePickers['setT1End'] ? datePickers['setT1End'].input.value : document.getElementById('setT1End').value,
+    term2Start: datePickers['setT2Start'] ? datePickers['setT2Start'].input.value : document.getElementById('setT2Start').value,
+    term2End: datePickers['setT2End'] ? datePickers['setT2End'].input.value : document.getElementById('setT2End').value
+  };
+  const res = await api('admin_updateSettings', payload);
+  btn.disabled = false; btn.textContent = '💾 บันทึกการตั้งค่าทั้งหมด';
+  if (res.success) {
+    toast(res.message);
+    state.reportsInited = false;
+    clearAllCaches();
+    await loadAdminSettings();
+  } else toast(res.message, 'error');
+});
+
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    const active = document.querySelector('.screen.active');
+    if (!active) return;
+    if (active.id === 'dashboardScreen' && state.dailyReportCache) {
+      const dd = datePickers['dailyDate'];
+      if (dd && dd.selectedDates.length) {
+        const selectedDate = dd.selectedDates[0];
+        const yyyy = selectedDate.getFullYear();
+        const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const cached = state.dailyReportCache[`${day}/${mm}/${yyyy}`];
+        if (cached) renderDailyReport(cached.data);
+      }
+    }
+    if (active.id === 'reportsScreen' && state.currentReportRecords && state.currentReportRecords.length) {
+      renderReportsTable(state.currentReportRecords);
+    }
+  }, 200);
+});
+
+document.getElementById('btnMigrateSheets').addEventListener('click', async () => {
+  if (!confirm('Migrate ชีทเก่า attendance1/2-YYYY → attendanceYYYY และลบชีทเก่า?\n(ทำครั้งเดียว - ข้อมูลจะถูก merge เข้าชีทใหม่)')) return;
+  const btn = document.getElementById('btnMigrateSheets');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลัง migrate...';
+  const res = await api('admin_migrateSheets');
+  btn.disabled = false; btn.textContent = '🔧 Migrate ชีทเก่า (attendance1/2-YYYY → attendanceYYYY)';
+  if (res.success) {
+    toast('Migrate สำเร็จ');
+    console.log('[Migrate log]', res.log);
+    clearAllCaches();
+    loadDailyReport(true);
+    loadReports(true);
+  } else {
+    toast(res.message, 'error');
+  }
+});
+</script>
+</body>
+</html>
