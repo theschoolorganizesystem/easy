@@ -6,41 +6,54 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;background:#0f172a;color:#f8fafc;padding:20px;min-height:100vh}
-.container{max-width:1100px;margin:0 auto}
+.container{max-width:1200px;margin:0 auto}
 h1{margin-bottom:20px}
 .card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;margin-bottom:16px}
-input,button{padding:10px 14px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:.95rem;font-family:inherit}
-button{background:#3b82f6;cursor:pointer;border:none;font-weight:600}
-button:hover{background:#2563eb}button.danger{background:#dc2626}button.success{background:#16a34a}
+input,button{padding:8px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:.9rem;font-family:inherit}
+button{background:#3b82f6;cursor:pointer;border:none;font-weight:600;transition:all .2s}
+button:hover{background:#2563eb}button.danger{background:#dc2626}button.danger:hover{background:#b91c1c}
+button.success{background:#16a34a}button.success:hover{background:#15803d}
+button.warning{background:#d97706}button.warning:hover{background:#b45309}
 table{width:100%;border-collapse:collapse;font-size:.85rem}
-th,td{padding:10px;text-align:left;border-bottom:1px solid #334155}
-th{background:#0f172a;font-weight:600;color:#94a3b8}tr:hover{background:#334155}
-.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600}
-.badge.active{background:#166534;color:#bbf7d0}.badge.expired{background:#7f1d1d;color:#fecaca}.badge.suspended{background:#78350f;color:#fed7aa}
+th,td{padding:12px 10px;text-align:left;border-bottom:1px solid #334155;vertical-align:middle}
+th{background:#0f172a;font-weight:600;color:#94a3b8}
+tr:hover{background:#334155}
+.badge{display:inline-block;padding:4px 8px;border-radius:6px;font-size:.75rem;font-weight:600}
+.badge.active{background:#166534;color:#bbf7d0}
+.badge.expired{background:#7f1d1d;color:#fecaca}
+.badge.suspended{background:#78350f;color:#fed7aa}
 .hide{display:none}
+.action-btns{display:flex;gap:4px;flex-wrap:wrap}
 </style>
 </head>
 <body>
 <div class="container">
   <h1>👑 Super Admin — TimeTrack Pro</h1>
+  
   <div id="loginBox" class="card" style="max-width:400px;margin:80px auto">
     <h2 style="margin-bottom:16px">เข้าสู่ระบบ</h2>
     <input id="saUser" placeholder="Username" style="width:100%;margin-bottom:10px" value="admin">
     <input id="saPass" type="password" placeholder="Password" style="width:100%;margin-bottom:10px">
     <button onclick="login()" style="width:100%">เข้าสู่ระบบ</button>
   </div>
+
   <div id="appBox" class="hide">
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h2>🏫 โรงเรียนทั้งหมด</h2><button onclick="logout()" style="background:#475569">ออกจากระบบ</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2>🏫 โรงเรียนทั้งหมด</h2>
+        <button onclick="logout()" style="background:#475569">ออกจากระบบ</button>
       </div>
-      <div id="tenantsTable"></div>
+      <div style="overflow-x:auto">
+        <table id="tenantsTable"></table>
+      </div>
     </div>
   </div>
 </div>
+
 <script src="config.js"></script>
 <script>
 let token = localStorage.getItem('sa_token') || '';
+
 async function api(cmd, extra) {
   const r = await fetch(window.APP_CONFIG.MASTER_URL, {
     method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -48,39 +61,108 @@ async function api(cmd, extra) {
   });
   return r.json();
 }
+
 async function login() {
-  const u = document.getElementById('saUser').value.trim(); const p = document.getElementById('saPass').value;
+  const u = document.getElementById('saUser').value.trim(); 
+  const p = document.getElementById('saPass').value;
   const r = await api('superadmin_login', { username: u, password: p });
   if (!r.success) return alert(r.message);
   token = r.token; localStorage.setItem('sa_token', token); showApp();
 }
+
 function logout() { localStorage.removeItem('sa_token'); token = ''; location.reload(); }
-function showApp() { document.getElementById('loginBox').classList.add('hide'); document.getElementById('appBox').classList.remove('hide'); loadTenants(); }
+
+function showApp() { 
+  document.getElementById('loginBox').classList.add('hide'); 
+  document.getElementById('appBox').classList.remove('hide'); 
+  loadTenants(); 
+}
+
 async function loadTenants() {
   const r = await api('superadmin_listTenants');
   if (!r.success) return alert('โหลดไม่สำเร็จ');
   const tbl = document.getElementById('tenantsTable');
-  if (r.tenants.length === 0) { tbl.innerHTML = '<p style="color:#94a3b8">ยังไม่มีโรงเรียน</p>'; return; }
-  tbl.innerHTML = `<table><thead><tr><th>School ID</th><th>ชื่อโรงเรียน</th><th>Owner</th><th>สถานะ</th><th>หมดอายุ</th><th>เหลือ</th><th>จัดการ</th></tr></thead><tbody>
-    ${r.tenants.map(t => `<tr>
-      <td><code style="font-size:.8rem">${esc(t.schoolId)}</code></td><td>${esc(t.schoolName)}</td><td>${esc(t.ownerEmail)}</td>
-      <td><span class="badge ${t.status}">${t.status}</span></td><td>${esc(t.licenseEnd || '-')}</td>
-      <td>${t.daysLeft === null ? '-' : t.daysLeft + ' วัน'}</td>
-      <td><button onclick="extendLicense('${t.schoolId}')" class="success" style="padding:4px 8px;font-size:.75rem">+30</button>
-      <button onclick="toggleStatus('${t.schoolId}','${t.status}')" class="danger" style="padding:4px 8px;font-size:.75rem">${t.status === 'suspended' ? 'ปลดล็อค' : 'ระงับ'}</button></td>
-    </tr>`).join('')}</tbody></table>`;
+  
+  if (r.tenants.length === 0) { 
+    tbl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8">ยังไม่มีโรงเรียนในระบบ</td></tr>'; 
+    return; 
+  }
+  
+  tbl.innerHTML = `
+    <thead>
+      <tr>
+        <th>School ID / ชื่อโรงเรียน</th>
+        <th>Owner (อีเมล)</th>
+        <th>สถานะ / วันหมดอายุ</th>
+        <th>เหลือ</th>
+        <th style="text-align:center">จัดการระบบ</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${r.tenants.map(t => `
+        <tr>
+          <td>
+            <div style="font-weight:bold; color:#60a5fa; font-family:monospace">${esc(t.schoolId)}</div>
+            <div style="color:#cbd5e1; margin-top:2px">${esc(t.schoolName)}</div>
+          </td>
+          <td>${esc(t.ownerEmail)}<br><span style="font-size:.75rem;color:#94a3b8">${esc(t.ownerPhone||'-')}</span></td>
+          <td>
+            <span class="badge ${t.status}">${t.status}</span><br>
+            <span style="font-size:.75rem;color:#94a3b8">${esc(t.licenseEnd || '-')}</span>
+          </td>
+          <td style="font-weight:bold; color:${t.daysLeft > 7 ? '#4ade80' : '#f87171'}">
+            ${t.daysLeft === null ? '-' : t.daysLeft + ' วัน'}
+          </td>
+          <td>
+            <div class="action-btns">
+              <button onclick="extendLicense('${t.schoolId}')" class="success" title="ต่ออายุ 30 วัน">+30 วัน</button>
+              <button onclick="resetAdminPassword('${t.schoolId}')" class="warning" title="รีเซ็ตรหัสแอดมิน">🔑 รีเซ็ตรหัส</button>
+              <button onclick="toggleStatus('${t.schoolId}','${t.status}')" class="danger" title="ระงับการใช้งาน">
+                ${t.status === 'suspended' ? '🔓 ปลดล็อค' : '🛑 ระงับ'}
+              </button>
+              <button onclick="deleteTenant('${t.schoolId}', '${esc(t.schoolName)}')" class="danger" style="background:#7f1d1d" title="ลบโรงเรียนทิ้ง">🗑️ ลบ</button>
+            </div>
+          </td>
+        </tr>
+      `).join('')}
+    </tbody>
+  `;
 }
+
 async function extendLicense(schoolId) {
   const days = prompt('ต่ออายุกี่วัน?', '30'); if (!days || isNaN(days)) return;
   const r = await api('superadmin_extendLicense', { schoolId, days: parseInt(days, 10) });
   alert(r.message); if (r.success) loadTenants();
 }
+
 async function toggleStatus(schoolId, current) {
   const newStatus = current === 'suspended' ? 'active' : 'suspended';
-  if (!confirm(`เปลี่ยนสถานะเป็น "${newStatus}" ?`)) return;
+  if (!confirm(`ยืนยันเปลี่ยนสถานะเป็น "${newStatus}" ?`)) return;
   const r = await api('superadmin_setStatus', { schoolId, status: newStatus });
   alert(r.message); if (r.success) loadTenants();
 }
+
+async function resetAdminPassword(schoolId) {
+  const newPw = prompt(`กรอกรหัสผ่านใหม่สำหรับแอดมินโรงเรียน ${schoolId}\n(อย่างน้อย 6 ตัวอักษร)`, '123456789');
+  if (!newPw) return;
+  if (newPw.length < 6) return alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+  
+  const r = await api('superadmin_resetAdminPassword', { schoolId, newPassword: newPw });
+  alert(r.message);
+}
+
+async function deleteTenant(schoolId, schoolName) {
+  const confirm1 = confirm(`⚠️ คำเตือนอันตราย!\nคุณต้องการลบโรงเรียน "${schoolName}" ใช่หรือไม่?\n\nข้อมูลทั้งหมด (ฐานข้อมูลครู, ประวัติลงเวลา, รูปภาพ) จะถูกย้ายลงถังขยะ Drive และไม่สามารถกู้คืนได้ในหน้านี้`);
+  if (!confirm1) return;
+  
+  const confirm2 = prompt(`พิมพ์คำว่า "DELETE" (ตัวพิมพ์ใหญ่) เพื่อยืนยันการลบโรงเรียน ${schoolId}`);
+  if (confirm2 !== 'DELETE') return alert('ยกเลิกการลบ (คุณพิมพ์ไม่ถูกต้อง)');
+  
+  const r = await api('superadmin_deleteTenant', { schoolId });
+  alert(r.message); 
+  if (r.success) loadTenants();
+}
+
 function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 if (token) showApp();
 </script>
