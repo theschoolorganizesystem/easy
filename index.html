@@ -552,6 +552,56 @@ tr.row-latest-day:hover td { background: color-mix(in srgb, var(--primary) 14%, 
 
 <script>
 // ============================================================
+// CONFIG & STATE
+// ============================================================
+const SCHOOL_ID = (new URLSearchParams(location.search).get('school') || '').trim().toLowerCase();
+if (!SCHOOL_ID) {
+  document.body.innerHTML = `
+    <div style="padding:40px; text-align:center; font-family:sans-serif; max-width:500px; margin:60px auto;">
+      <h2>⚠️ ไม่พบโรงเรียน</h2>
+      <p>กรุณาเข้าผ่านลิงก์ของโรงเรียน เช่น</p>
+      <code style="background:#f0f0f0; padding:8px; display:block; margin:16px 0;">https://yourwebsite.com/?school=xxxxxx</code>
+      <p>หรือ <a href="signup.html">สมัครโรงเรียนใหม่</a></p>
+    </div>`;
+  throw new Error('No school param');
+}
+
+const API_URL = 'https://script.google.com/macros/s/AKfycbwQpTi23W3zu-aogXZl4jXhvulSGAB5JDvrZOeZYVcvVBLkofRZrTq2KMduM5dcO9RuNA/exec';
+const CACHE_TTL_REPORTS = 4 * 1000;
+const CACHE_TTL_DAILY   = 2 * 1000;
+const POLL_INTERVAL_MS  = 30000;  // ⚡ ลดโควต้าเป็น 30 วิ
+
+const state = {
+  token: localStorage.getItem('tt_token') || '',
+  user: JSON.parse(localStorage.getItem('tt_user') || 'null'),
+  settings: null,
+  selectedAction: null,
+  currentPos: null,
+  posTimestamp: 0,
+  loadingAuth: false,
+  profilePicBase64: null,
+  signatureBase64: null,
+  editUserPicBase64: null,
+  editUserSigBase64: null,
+  dailyDateAuto: true,
+  todayRecord: null,
+  todayLeave: null,
+  todayPendingLeave: null,
+  approvedList: [],
+  lastStatusFetch: 0,
+  reportsCache: {},
+  reportsLoadingKey: null,
+  reportsInited: false,
+  currentReportRecords: [],
+  adminUsers: [],
+  dailyReportCache: {},
+  dailyLoadingKey: null,
+  pollTimer: null,
+  userDict: {},
+  isPendingLeaveLocked: false
+};
+
+// ============================================================
 // THEME ENGINE
 // ============================================================
 function applyTheme() {
@@ -704,43 +754,8 @@ document.body.addEventListener('click', function initWelcome() {
 }, { once: true });
 
 // ============================================================
-// CONFIG & STATE
+// UTILS
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbyDE1PsL1XNzxMAWFsG54064zml4FJONUOKWPvof5BvZyKxqD_XOznzpamM8j1JrS4/exec';
-const CACHE_TTL_REPORTS = 4 * 1000;
-const CACHE_TTL_DAILY   = 2 * 1000;
-const POLL_INTERVAL_MS  = 1500;  // ⚡ real-time: 1.5s (เดิม 2s)
-
-const state = {
-  token: localStorage.getItem('tt_token') || '',
-  user: JSON.parse(localStorage.getItem('tt_user') || 'null'),
-  settings: null,
-  selectedAction: null,
-  currentPos: null,
-  posTimestamp: 0,
-  loadingAuth: false,
-  profilePicBase64: null,
-  signatureBase64: null,
-  editUserPicBase64: null,
-  editUserSigBase64: null,
-  dailyDateAuto: true,
-  todayRecord: null,
-  todayLeave: null,
-  todayPendingLeave: null,
-  approvedList: [],
-  lastStatusFetch: 0,
-  reportsCache: {},
-  reportsLoadingKey: null,
-  reportsInited: false,
-  currentReportRecords: [],
-  adminUsers: [],
-  dailyReportCache: {},
-  dailyLoadingKey: null,
-  pollTimer: null,
-  userDict: {},
-  isPendingLeaveLocked: false
-};
-
 function esc(s) {
   return String(s === null || s === undefined ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -763,7 +778,6 @@ function termForDateClient(ms) {
   const inTerm1 = (month >= 5 && month <= 9) || (month === 10 && day <= 15);
   return { term: inTerm1 ? '1' : '2', year: String(buddhistYear) };
 }
-
 function dmyToMsClient(str) {
   const m = String(str || '').match(/^(\d{1,2})\/([ก-ฮ\.\w]+)\/(\d{4})$/);
   if (!m) return 0;
@@ -775,22 +789,56 @@ function dmyToMsClient(str) {
   return new Date(y, mIdx, parseInt(m[1], 10)).getTime();
 }
 
+// ============================================================
+// API CALL (⭐ สำคัญ: แนบ schoolId)
+// ============================================================
 async function api(cmd, extra = {}) {
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ cmd, token: state.token, ...extra })
+      body: JSON.stringify({ cmd, schoolId: SCHOOL_ID, token: state.token, ...extra })
     });
     const data = await res.json();
+    
     if (data && data.code === 'AUTH' && cmd !== 'login' && cmd !== 'logout' && state.token) {
       forceLogout(data.message);
+    }
+    if (data && data.code === 'LICENSE') {
+      showLicenseExpiredScreen(data);
+      return data;
+    }
+    if (data && data.code === 'NO_SCHOOL') {
+      document.body.innerHTML = `<div style="padding:40px; text-align:center;">${esc(data.message)}</div>`;
+      return data;
     }
     return data;
   } catch (err) {
     return { success: false, message: 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ' };
   }
 }
+
+function showLicenseExpiredScreen(data) {
+  document.body.innerHTML = `
+    <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+                background:#fdfbf7; font-family:'Mali',sans-serif;">
+      <div style="max-width:480px; background:#fff; padding:32px; border-radius:16px;
+                  box-shadow:4px 4px 0 #3b3a4a; border:2px solid #3b3a4a; text-align:center;">
+        <div style="font-size:3rem;">🔒</div>
+        <h2 style="margin:12px 0; color:#ff7b93;">License หมดอายุ</h2>
+        <p style="color:#666; line-height:1.6;">
+          ${data.status === 'suspended' ? 'บัญชีโรงเรียนนี้ถูกระงับการใช้งาน' : 'License ของโรงเรียนนี้หมดอายุแล้ว'}
+          ${data.licenseEnd ? `<br>วันหมดอายุ: <b>${data.licenseEnd}</b>` : ''}
+        </p>
+        <p style="color:#666; margin-top:16px;">
+          กรุณาติดต่อผู้ดูแลระบบเพื่อต่ออายุ<br>
+          <a href="mailto:your@email.com" style="color:#ff9a62;">your@email.com</a>
+        </p>
+      </div>
+    </div>`;
+  throw new Error('License expired');
+}
+
 function forceLogout(msg) {
   localStorage.removeItem('tt_token');
   localStorage.removeItem('tt_user');
@@ -803,6 +851,7 @@ function forceLogout(msg) {
   showScreen('authScreen');
   toast(msg || 'กรุณาเข้าสู่ระบบใหม่', 'error');
 }
+
 function toast(msg, type = 'success') {
   const el = document.getElementById('toast');
   document.getElementById('toastIcon').textContent = type === 'success' ? '✅' : '⚠️';
@@ -810,6 +859,7 @@ function toast(msg, type = 'success') {
   el.className = `toast ${type} show`;
   setTimeout(() => el.classList.remove('show'), 4000);
 }
+
 function speakPendingAlerts(hasLeave, hasOB) {
   if (sessionStorage.getItem('voicePlayed') === 'true') return;
   if (!('speechSynthesis' in window)) return;
@@ -826,6 +876,7 @@ function speakPendingAlerts(hasLeave, hasOB) {
   play(); setTimeout(play, 2500);
   sessionStorage.setItem('voicePlayed', 'true');
 }
+
 function invalidateAllReportCaches() {
   Object.keys(state.reportsCache).forEach(k => { state.reportsCache[k].ts = 0; });
   Object.keys(state.dailyReportCache).forEach(k => { state.dailyReportCache[k].ts = 0; });
@@ -842,20 +893,22 @@ function clearAllCaches() {
   state.isPendingLeaveLocked = false;
 }
 
-// ⚡ แก้: ลด redundant API calls ตอน poll — เรียก checkTodayStatus แบบมี throttle
-// และ checkPendingCounts แบบมี throttle ทำให้ loadDailyReport ได้ bandwidth เต็ม
+// ⚡ Polling
 function pollTick() {
   if (document.hidden || !state.token) return;
   const activeScreen = document.querySelector('.screen.active');
   if (!activeScreen) return;
+
+  const isMgr = isManager();
   if (activeScreen.id === 'dashboardScreen') {
-    loadDailyReport(false, true);
-    checkTodayStatus();                          // ⚡ ไม่ force — ใช้ throttle 10s
-    if (isManager()) checkPendingCounts();       // ⚡ ไม่ force — ใช้ throttle 15s
-  } else if (activeScreen.id === 'reportsScreen') {
-    loadReports(false, true);
+    if (isMgr) {
+      loadDailyReport(false, true);
+      if (isMgr) checkPendingCounts();
+    }
+    checkTodayStatus();
   }
 }
+
 function startPolling() {
   if (state.pollTimer) clearInterval(state.pollTimer);
   state.pollTimer = setInterval(pollTick, POLL_INTERVAL_MS);
@@ -1083,7 +1136,7 @@ async function initUserSession() {
   }
   state.dailyDateAuto = true;
 
-  if (isManager()) checkPendingCounts(true);   // ⚡ force ครั้งแรกหลัง login
+  if (isManager()) checkPendingCounts(true);
   showScreen('dashboardScreen');
   return true;
 }
@@ -1116,11 +1169,10 @@ function applyUserUpdate(u) {
   }
   if (changed) {
     refreshDashboardMode();
-    if (isManager()) checkPendingCounts(true);   // ⚡ force เมื่อ role เปลี่ยน
+    if (isManager()) checkPendingCounts(true);
   }
 }
 
-// ⚡ แก้: เพิ่ม throttle 15s (เดิมยิงทุก 2s ทำให้ Apps Script throttle ทำให้ getDailyReport ช้า)
 let _lastPendingCountFetch = 0;
 async function checkPendingCounts(force = false) {
   if (!isManager()) return;
@@ -1374,7 +1426,6 @@ document.getElementById('attendanceForm').addEventListener('submit', async (e) =
       document.getElementById('reasonSection').classList.remove('visible');
       document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
       state.selectedAction = null;
-      // ⚡ real-time: force refetch ทันที + delayed refetch อีก 2 จังหวะ เพื่อจับ server processing lag
       invalidateAllReportCaches();
       loadDailyReport(true);
       checkTodayStatus(true);
