@@ -368,7 +368,13 @@ tr.row-latest-day:hover td { background: color-mix(in srgb, var(--primary) 14%, 
         <div class="field"><label class="field-label">ชื่อผู้ใช้ <span class="req">*</span></label><input type="text" id="profUsername" class="input" required disabled style="opacity:0.6;"></div>
         <div class="field"><label class="field-label">ชื่อ-นามสกุล <span class="req">*</span></label><input type="text" id="profFullName" class="input" required></div>
         <div class="field"><label class="field-label">ตำแหน่ง</label>
-          <select id="profPosition" class="select"><option value="ครู">ครู</option><option value="ผอ.">ผอ.</option><option value="พนักงาน">พนักงาน</option><option value="ลูกจ้าง">ลูกจ้าง</option></select>
+          <select id="profPosition" class="select">
+            <option value="ครู">ครู</option>
+            <option value="ผอ.">ผอ.</option>
+            <option value="พนักงาน">พนักงาน</option>
+            <option value="ลูกจ้าง">ลูกจ้าง</option>
+            <option value="แอดมิน" id="profPosAdmin" style="display:none;">แอดมิน</option>
+          </select>
         </div>
         <div class="field"><label class="field-label">อีเมล</label><input type="email" id="profEmail" class="input"></div>
         <div class="field" style="background: var(--bg-color); padding: 16px; border-radius: var(--radius-md); text-align: center; border:2px solid var(--border-color)">
@@ -482,7 +488,12 @@ tr.row-latest-day:hover td { background: color-mix(in srgb, var(--primary) 14%, 
     <div class="field"><label class="field-label">Username</label><input type="text" id="editUserUsername" class="input" disabled></div>
     <div class="field"><label class="field-label">ชื่อ-นามสกุล</label><input type="text" id="editUserFullName" class="input"></div>
     <div class="field"><label class="field-label">ตำแหน่ง</label>
-      <select id="editUserPosition" class="select"><option value="ครู">ครู</option><option value="ผอ.">ผอ.</option><option value="พนักงาน">พนักงาน</option><option value="ลูกจ้าง">ลูกจ้าง</option></select>
+      <select id="editUserPosition" class="select">
+        <option value="ครู">ครู</option>
+        <option value="ผอ.">ผอ.</option>
+        <option value="พนักงาน">พนักงาน</option>
+        <option value="ลูกจ้าง">ลูกจ้าง</option>
+      </select>
     </div>
     <div class="field" style="background:var(--bg-color); padding:12px; border-radius:12px; border:2px solid var(--border-color);">
       <label class="checkbox-group" id="editGpsOverrideGroup"><input type="checkbox" id="editUserGpsOverride" style="width:20px; height:20px;"><span style="font-weight:700;">อนุญาตให้ลงเวลานอกพื้นที่ GPS</span></label>
@@ -545,7 +556,7 @@ if (!SCHOOL_ID) {
 const API_URL = 'https://script.google.com/macros/s/AKfycbwQpTi23W3zu-aogXZl4jXhvulSGAB5JDvrZOeZYVcvVBLkofRZrTq2KMduM5dcO9RuNA/exec';
 const CACHE_TTL_REPORTS = 4 * 1000;
 const CACHE_TTL_DAILY   = 2 * 1000;
-const POLL_INTERVAL_MS  = 60000; // ⚡ อัปเดต: ลดโควต้าเป็น 60 วินาที
+const POLL_INTERVAL_MS  = 60000; // ⚡ ลดโควต้าเป็น 60 วินาที
 
 const state = {
   token: localStorage.getItem('tt_token') || '',
@@ -809,7 +820,7 @@ function showLicenseExpiredScreen(data) {
         <p style="color:#666; margin-top:16px; line-height: 1.8;">
           กรุณาติดต่อผู้ดูแลระบบเพื่อต่ออายุ<br>
           📞 โทร: <a href="tel:0970802338" style="color:#ff9a62; font-weight:bold; text-decoration:none;">097-080-2338</a><br>
-          💬 LINE: <a href="https://line.me/ti/p/~09708023380" target="_blank" style="color:#ff9a62; font-weight:bold; text-decoration:none;">09708023380</a>
+          💬 LINE: <a href="https://line.me/ti/p/~09756890320" target="_blank" style="color:#ff9a62; font-weight:bold; text-decoration:none;">09756890320</a>
         </p>
       </div>
     </div>`;
@@ -1125,9 +1136,14 @@ async function initUserSession() {
   state.approvedList = res.approvedList || [];
   state.lastStatusFetch = Date.now();
 
-  document.getElementById('dashName').textContent = getFirstName(state.user.fullName);
-  const displayPos = state.user.position || 'ครู';
+  // ✅ อัปเดต: ถ้าเป็นแอดมิน ให้ใช้ชื่อโรงเรียนแทนชื่อผู้ดูแล
+  const displayName = (state.user.role === 'admin' && state.settings?.officeName) ? state.settings.officeName : getFirstName(state.user.fullName);
+  document.getElementById('dashName').textContent = displayName;
+  
+  // ✅ อัปเดต: ถ้าเป็นแอดมิน ให้แสดงตำแหน่งเป็น "แอดมิน"
+  const displayPos = state.user.role === 'admin' ? 'แอดมิน' : (state.user.position || 'ครู');
   document.getElementById('dashRole').textContent = `${state.user.username} · ${displayPos}`;
+  
   document.getElementById('dashPic').src = state.user.profilePic || 'https://via.placeholder.com/64';
   const rptAvatar = document.getElementById('reportsPdfAvatar');
   if (rptAvatar) rptAvatar.src = state.user.profilePic || '';
@@ -1167,8 +1183,15 @@ function applyUserUpdate(u) {
   const changed = u.position !== state.user.position || u.role !== state.user.role || u.fullName !== state.user.fullName;
   state.user = { ...state.user, ...u };
   if (localStorage.getItem('tt_token')) localStorage.setItem('tt_user', JSON.stringify(state.user));
-  document.getElementById('dashName').textContent = getFirstName(state.user.fullName);
-  document.getElementById('dashRole').textContent = `${state.user.username} · ${state.user.position || 'ครู'}`;
+  
+  // ✅ อัปเดต: ถ้าเป็นแอดมิน ให้ใช้ชื่อโรงเรียนแทน
+  const displayName = (state.user.role === 'admin' && state.settings?.officeName) ? state.settings.officeName : getFirstName(state.user.fullName);
+  document.getElementById('dashName').textContent = displayName;
+
+  // ✅ อัปเดต: ตำแหน่งของแอดมิน
+  const displayPos = state.user.role === 'admin' ? 'แอดมิน' : (state.user.position || 'ครู');
+  document.getElementById('dashRole').textContent = `${state.user.username} · ${displayPos}`;
+  
   if (state.user.profilePic) {
     document.getElementById('dashPic').src = state.user.profilePic;
     const rptAvatar = document.getElementById('reportsPdfAvatar');
@@ -1857,11 +1880,23 @@ function updateProfileUI() {
   if(!state.user) return;
   document.getElementById('profUsername').value = state.user.username;
   document.getElementById('profFullName').value = state.user.fullName;
-  const validPositions = ['ครู', 'ผอ.', 'พนักงาน', 'ลูกจ้าง'];
+  
   const profPosSelect = document.getElementById('profPosition');
-  profPosSelect.value = validPositions.includes(state.user.position) ? state.user.position : 'ครู';
+  const adminOpt = document.getElementById('profPosAdmin');
   const canPickDirector = isManager();
-  Array.from(profPosSelect.options).forEach(o => { if (o.value === 'ผอ.') o.disabled = !canPickDirector; });
+
+  if (isAdminRole()) {
+    adminOpt.style.display = 'block';
+    profPosSelect.value = 'แอดมิน';
+    profPosSelect.disabled = true; // ล็อคไม่ให้แอดมินเปลี่ยนตำแหน่งตัวเอง
+  } else {
+    adminOpt.style.display = 'none';
+    profPosSelect.disabled = false;
+    const validPositions = ['ครู', 'ผอ.', 'พนักงาน', 'ลูกจ้าง'];
+    profPosSelect.value = validPositions.includes(state.user.position) ? state.user.position : 'ครู';
+    Array.from(profPosSelect.options).forEach(o => { if (o.value === 'ผอ.') o.disabled = !canPickDirector; });
+  }
+
   document.getElementById('profEmail').value = state.user.email || '';
   document.getElementById('profilePicPreview').src = state.user.profilePic || 'https://via.placeholder.com/100';
   const sigPreview = document.getElementById('sigPreview');
@@ -1905,10 +1940,12 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = document.getElementById('saveProfileBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> บันทึก...';
+  
+  // ถ้าเป็นแอดมิน ไม่ต้องส่งตำแหน่งไปให้ Backend อัปเดต (หรือส่งเป็น ผอ. เหมือนเดิมเพื่อไม่ให้ Error)
   const payload = {
     username: document.getElementById('profUsername').value.trim().toLowerCase(),
     fullName: document.getElementById('profFullName').value.trim(),
-    position: document.getElementById('profPosition').value,
+    position: isAdminRole() ? state.user.position : document.getElementById('profPosition').value,
     email: document.getElementById('profEmail').value.trim(),
     profilePicBase64: state.profilePicBase64,
     signatureBase64: state.signatureBase64
@@ -2050,6 +2087,10 @@ function openEditUser(username, fullName, role, status, position, email, gpsOver
   const validPositions = ['ครู', 'ผอ.', 'พนักงาน', 'ลูกจ้าง'];
   const editPosSelect = document.getElementById('editUserPosition');
   editPosSelect.value = validPositions.includes(position) ? position : 'ครู';
+  
+  // ซ่อนตัวเลือก "แอดมิน" สำหรับการแก้ไขผู้ใช้ทั่วไป
+  Array.from(editPosSelect.options).forEach(o => { if (o.value === 'แอดมิน') o.remove(); });
+
   const gpsCheck = document.getElementById('editUserGpsOverride');
   if (editPosSelect.value === 'ผอ.') { gpsCheck.checked = true; gpsCheck.disabled = true; }
   else { gpsCheck.checked = (gpsOverride === 'true'); gpsCheck.disabled = false; }
