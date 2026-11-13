@@ -806,9 +806,10 @@ function showLicenseExpiredScreen(data) {
           ${data.status === 'suspended' ? 'บัญชีโรงเรียนนี้ถูกระงับการใช้งาน' : 'License ของโรงเรียนนี้หมดอายุแล้ว'}
           ${data.licenseEnd ? `<br>วันหมดอายุ: <b>${data.licenseEnd}</b>` : ''}
         </p>
-        <p style="color:#666; margin-top:16px;">
+        <p style="color:#666; margin-top:16px; line-height: 1.8;">
           กรุณาติดต่อผู้ดูแลระบบเพื่อต่ออายุ<br>
-          <a href="mailto:your@email.com" style="color:#ff9a62;">your@email.com</a>
+          📞 โทร: <a href="tel:0970802338" style="color:#ff9a62; font-weight:bold; text-decoration:none;">097-080-2338</a><br>
+          💬 LINE: <a href="https://line.me/ti/p/~@yourlineid" target="_blank" style="color:#ff9a62; font-weight:bold; text-decoration:none;">@yourlineid</a>
         </p>
       </div>
     </div>`;
