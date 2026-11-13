@@ -39,7 +39,8 @@ button:disabled{opacity:.6;cursor:not-allowed}
     <div class="field"><label>รหัสผ่าน (6 ตัวขึ้นไป) *</label><input type="password" id="adminPassword" placeholder="******"></div>
     <div class="field"><label>ยืนยันรหัสผ่าน *</label><input type="password" id="adminPassword2" placeholder="******"></div>
     
-    <button type="submit" id="submitBtn">✨ สมัครใช้งาน (ทดลอง 14 วัน)</button>
+    <!-- ✅ แก้ไขปุ่มตรงนี้ให้เป็น ✨ สมัครใช้งาน -->
+    <button type="submit" id="submitBtn">✨ สมัครใช้งาน</button>
   </form>
   
   <div class="trail">มีบัญชีแล้ว? <a href="#" id="loginLink">เข้าสู่ระบบ</a></div>
@@ -49,7 +50,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 const MASTER_API_URL = 'https://script.google.com/macros/s/AKfycbxdKPEj6TyukUoOmSMqeFtms4dt6O7NBxeIfY7wuhnYE9qL-Gka9EGED52ePSJ3RlJmJA/exec';
 
 document.getElementById('signupForm').addEventListener('submit', async function(e) {
-  e.preventDefault(); // ป้องกันหน้าเว็บรีเฟรช
+  e.preventDefault();
   
   const btn = document.getElementById('submitBtn');
   const schoolName = document.getElementById('schoolName').value.trim();
@@ -60,7 +61,6 @@ document.getElementById('signupForm').addEventListener('submit', async function(
   const pw = document.getElementById('adminPassword').value;
   const pw2 = document.getElementById('adminPassword2').value;
 
-  // ตรวจสอบข้อมูล
   if (!schoolName) return alert('⚠️ กรุณากรอกชื่อโรงเรียน');
   if (!ownerEmail) return alert('⚠️ กรุณากรอกอีเมล');
   if (!adminUsername) return alert('⚠️ กรุณากรอก Username ผู้ดูแลระบบ');
