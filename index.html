@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<!-- Flatpickr for Date Picker -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -63,30 +62,9 @@ body{ font-family:'Mali', 'Prompt', sans-serif; background-color:var(--bg-color)
 .icon-btn:hover{ background:var(--bg-pattern); transform: scale(1.05); }
 .icon-btn:active{ transform:translate(2px, 2px); box-shadow: 0px 0px 0px var(--border-color); }
 
-.btn-back {
-  background: var(--primary);
-  color: #fff;
-  border: var(--border-width) solid var(--border-color);
-  border-radius: 12px;
-  padding: 8px 14px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 2px 2px 0px var(--border-color);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all .1s;
-}
-.btn-back:hover {
-  background: var(--primary-hover);
-  transform: scale(1.02);
-}
-.btn-back:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0 0 0 var(--border-color);
-}
+.btn-back { background: var(--primary); color: #fff; border: var(--border-width) solid var(--border-color); border-radius: 12px; padding: 8px 14px; font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; box-shadow: 2px 2px 0px var(--border-color); display: flex; align-items: center; gap: 6px; transition: all .1s; }
+.btn-back:hover { background: var(--primary-hover); transform: scale(1.02); }
+.btn-back:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--border-color); }
 
 .tabs{ display:flex; gap:8px; background:var(--bg-pattern); padding:6px; border-radius:var(--radius-lg); border:var(--border-width) solid var(--border-color); overflow-x:auto; }
 .tab{ flex:1; padding:10px 12px; border:var(--border-width) solid transparent; background:transparent; color:var(--text-muted); font-family:inherit; font-size:.9rem; font-weight:600; cursor:pointer; border-radius:12px; transition:all .2s; white-space:nowrap; }
@@ -193,7 +171,6 @@ tr.row-latest-day:hover td { background: color-mix(in srgb, var(--primary) 14%, 
 
 .latest-day-label { display: inline-block; font-size: 0.65rem; font-weight: 700; background: var(--primary); color: #fff; border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
 
-/* Flatpickr Custom Overrides */
 .flatpickr-calendar { font-family: 'Mali', sans-serif !important; border: 2px solid var(--border-color) !important; box-shadow: 4px 4px 0 var(--border-color) !important; border-radius: 12px !important; }
 .flatpickr-day.selected { background: var(--primary) !important; border-color: var(--primary) !important; }
 .datepicker-wrap { position: relative; display: inline-block; }
@@ -546,7 +523,6 @@ tr.row-latest-day:hover td { background: color-mix(in srgb, var(--primary) 14%, 
   </div>
 </div>
 
-<!-- Flatpickr Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
 
@@ -569,7 +545,7 @@ if (!SCHOOL_ID) {
 const API_URL = 'https://script.google.com/macros/s/AKfycbwQpTi23W3zu-aogXZl4jXhvulSGAB5JDvrZOeZYVcvVBLkofRZrTq2KMduM5dcO9RuNA/exec';
 const CACHE_TTL_REPORTS = 4 * 1000;
 const CACHE_TTL_DAILY   = 2 * 1000;
-const POLL_INTERVAL_MS  = 30000;  // ⚡ ลดโควต้าเป็น 30 วิ
+const POLL_INTERVAL_MS  = 60000; // ⚡ อัปเดต: ลดโควต้าเป็น 60 วินาที
 
 const state = {
   token: localStorage.getItem('tt_token') || '',
@@ -893,20 +869,50 @@ function clearAllCaches() {
   state.isPendingLeaveLocked = false;
 }
 
-// ⚡ Polling
-function pollTick() {
+// ============================================================
+// ✅ อัปเดต Polling เป็น pollData แบบ 1 Request (60 วินาที)
+// ============================================================
+async function pollTick() {
   if (document.hidden || !state.token) return;
-  const activeScreen = document.querySelector('.screen.active');
-  if (!activeScreen) return;
+  const active = document.querySelector('.screen.active');
+  if (!active || active.id !== 'dashboardScreen') return;
 
   const isMgr = isManager();
-  if (activeScreen.id === 'dashboardScreen') {
-    if (isMgr) {
-      loadDailyReport(false, true);
-      if (isMgr) checkPendingCounts();
-    }
-    checkTodayStatus();
+  const dd = datePickers['dailyDate'];
+  let dateStr = '';
+  if (isMgr && dd && dd.selectedDates.length) {
+    const d = dd.selectedDates[0];
+    dateStr = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
   }
+
+  try {
+    const res = await api('pollData', { dailyDate: dateStr });
+    if (!res.success) return;
+
+    if (res.record !== undefined) {
+      state.todayRecord = res.record;
+      state.todayLeave = res.leave;
+      state.todayPendingLeave = res.pendingLeave;
+      state.approvedList = res.approvedList || [];
+      state.lastStatusFetch = Date.now();
+      updateActionButtonsUI();
+    }
+
+    if (res.pendingCounts) {
+      const total = res.pendingCounts.leave + res.pendingCounts.ob;
+      const badge = document.getElementById('approveBadge');
+      if (badge) {
+        badge.textContent = total > 0 ? total : '';
+        badge.style.display = total > 0 ? 'inline-block' : 'none';
+      }
+      if (total > 0) speakPendingAlerts(res.pendingCounts.leave > 0, res.pendingCounts.ob > 0);
+    }
+
+    if (res.dailyRecords && dateStr) {
+      state.dailyReportCache[dateStr] = { data: res.dailyRecords, ts: Date.now() };
+      renderDailyReport(res.dailyRecords);
+    }
+  } catch (e) {}
 }
 
 function startPolling() {
