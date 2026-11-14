@@ -10,8 +10,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#f8
 .container{max-width:1250px;margin:0 auto}
 h1{margin-bottom:20px;font-size:1.5rem}
 .card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1)}
-input,button{padding:8px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:.9rem;font-family:inherit}
-input:focus{outline:none;border-color:#3b82f6}
+input,button,textarea{padding:8px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f8fafc;font-size:.9rem;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:#3b82f6}
 button{background:#3b82f6;cursor:pointer;border:none;font-weight:600;transition:all .2s}
 button:hover{background:#2563eb}
 button:disabled{opacity:0.5;cursor:not-allowed}
@@ -30,6 +30,31 @@ tr:hover{background:#334155}
 .hide{display:none}
 .action-btns{display:flex;gap:6px;flex-wrap:wrap}
 .action-btns button{padding:6px 10px;font-size:0.75rem}
+
+/* Tabs */
+.tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid #334155;padding-bottom:10px}
+.tab{background:transparent;color:#94a3b8;border:none;padding:8px 16px;font-size:1rem;cursor:pointer;border-radius:8px}
+.tab.active{background:#3b82f6;color:#fff}
+
+/* Form */
+.form-group{margin-bottom:16px}
+.form-label{display:block;margin-bottom:8px;color:#cbd5e1;font-weight:500}
+.form-input{width:100%;padding:12px}
+.form-textarea{width:100%;min-height:150px;resize:vertical;padding:12px}
+.file-upload{background:#0f172a;border:1px dashed #475569;padding:16px;border-radius:8px;text-align:center;margin-bottom:16px}
+.file-input{display:none}
+.file-label{display:inline-block;background:#334155;color:#f8fafc;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:.9rem;transition:all .2s}
+.file-label:hover{background:#475569}
+.file-name{display:block;margin-top:8px;font-size:.85rem;color:#94a3b8}
+.school-checkbox-list{max-height:200px;overflow-y:auto;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;margin-top:8px}
+.school-checkbox-label{display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;font-size:.9rem}
+.school-checkbox-label input[type="checkbox"]{width:18px;height:18px;accent-color:#3b82f6}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px; opacity:0; pointer-events:none; transition:opacity .3s}
+.modal-overlay.show{opacity:1; pointer-events:auto}
+.modal{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:24px;max-width:500px;width:100%;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+.modal h3{margin-bottom:16px;font-size:1.2rem}
 </style>
 </head>
 <body>
@@ -44,14 +69,106 @@ tr:hover{background:#334155}
   </div>
 
   <div id="appBox" class="hide">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h2>🏫 โรงเรียนทั้งหมด</h2>
-        <button onclick="logout()" class="neutral">ออกจากระบบ</button>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('tabSchools')">🏫 รายชื่อโรงเรียน</button>
+      <button class="tab" onclick="switchTab('tabEmail')">✉️ ส่งอีเมล</button>
+    </div>
+
+    <!-- TAB 1: SCHOOLS -->
+    <div id="tabSchools" class="tab-content">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h2>รายชื่อโรงเรียนทั้งหมด</h2>
+          <button onclick="logout()" class="neutral">ออกจากระบบ</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table id="tenantsTable"></table>
+        </div>
       </div>
-      <div style="overflow-x:auto">
-        <table id="tenantsTable"></table>
+    </div>
+
+    <!-- TAB 2: EMAIL -->
+    <div id="tabEmail" class="tab-content hide">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h2>✉️ ส่งอีเมลแจ้งเตือน / เอกสาร</h2>
+          <button onclick="logout()" class="neutral">ออกจากระบบ</button>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">เลือกโรงเรียน (สามารถเลือกได้หลายโรงเรียน)</label>
+          <div style="margin-bottom:8px; display:flex; gap:8px;">
+            <button class="neutral" onclick="toggleAllSchools(true)" style="padding:4px 10px;font-size:.8rem">เลือกทั้งหมด</button>
+            <button class="neutral" onclick="toggleAllSchools(false)" style="padding:4px 10px;font-size:.8rem">ยกเลิกทั้งหมด</button>
+          </div>
+          <div id="schoolCheckboxList" class="school-checkbox-list">
+            <!-- Checkboxes will be rendered here -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">หัวข้ออีเมล (Subject) *</label>
+          <input type="text" id="emailSubject" class="form-input" placeholder="เช่น แจ้งเตือนการต่ออายุ / เอกสารประชาสัมพันธ์">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ข้อความ (Message) *</label>
+          <textarea id="emailMessage" class="form-textarea" placeholder="พิมพ์ข้อความที่ต้องการส่ง..."></textarea>
+        </div>
+
+        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+          <div class="file-upload" style="flex:1; min-width:200px;">
+            <label class="form-label">แนบรูปภาพ (ถ้ามี)</label>
+            <label for="imageUpload" class="file-label">📷 เลือกรูปภาพ</label>
+            <input type="file" id="imageUpload" class="file-input" accept="image/*">
+            <span id="imageFileName" class="file-name">ยังไม่ได้เลือกไฟล์</span>
+          </div>
+
+          <div class="file-upload" style="flex:1; min-width:200px;">
+            <label class="form-label">แนบไฟล์ PDF (ถ้ามี)</label>
+            <label for="pdfUpload" class="file-label">📄 เลือกไฟล์ PDF</label>
+            <input type="file" id="pdfUpload" class="file-input" accept="application/pdf">
+            <span id="pdfFileName" class="file-name">ยังไม่ได้เลือกไฟล์</span>
+          </div>
+        </div>
+
+        <button onclick="sendEmail()" class="success" style="width:100%; padding:14px; font-size:1.1rem;" id="sendEmailBtn">
+          🚀 ส่งอีเมล
+        </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT TENANT -->
+<div class="modal-overlay" id="editTenantModal">
+  <div class="modal">
+    <h3>✏️ แก้ไขข้อมูลโรงเรียน</h3>
+    <input type="hidden" id="editSchoolId">
+    
+    <div class="form-group">
+      <label class="form-label">ชื่อโรงเรียน</label>
+      <input type="text" id="editSchoolName" class="form-input">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">เบอร์โทรศัพท์ (Owner)</label>
+      <input type="text" id="editOwnerPhone" class="form-input">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Username แอดมินโรงเรียน</label>
+      <input type="text" id="editAdminUsername" class="form-input">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)</label>
+      <input type="text" id="editAdminPassword" class="form-input" placeholder="อย่างน้อย 6 ตัวอักษร">
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="neutral" onclick="closeEditTenantModal()">ยกเลิก</button>
+      <button class="success" onclick="saveTenantInfo()" id="saveTenantBtn">💾 บันทึก & ส่งอีเมล</button>
     </div>
   </div>
 </div>
@@ -59,6 +176,9 @@ tr:hover{background:#334155}
 <script>
 const MASTER_API_URL = 'https://script.google.com/macros/s/AKfycbxdKPEj6TyukUoOmSMqeFtms4dt6O7NBxeIfY7wuhnYE9qL-Gka9EGED52ePSJ3RlJmJA/exec';
 let token = localStorage.getItem('sa_token') || '';
+let cachedTenants = [];
+let imageBase64 = null;
+let pdfBase64 = null;
 
 async function api(cmd, extra) {
   try {
@@ -83,11 +203,15 @@ async function login() {
   const r = await api('superadmin_login', { username: u, password: p });
   btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
   
-  if (!r.success) return alert(r.message);
+  if (!r.success) return alert(r.message || 'เกิดข้อผิดพลาด');
   token = r.token; localStorage.setItem('sa_token', token); showApp();
 }
 
-function logout() { localStorage.removeItem('sa_token'); token = ''; location.reload(); }
+function logout() { 
+  localStorage.removeItem('sa_token'); 
+  token = ''; 
+  location.reload(); 
+}
 
 function showApp() { 
   document.getElementById('loginBox').classList.add('hide'); 
@@ -95,31 +219,50 @@ function showApp() {
   loadTenants(); 
 }
 
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hide'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).classList.remove('hide');
+  event.target.classList.add('active');
+}
+
 async function loadTenants() {
   const tbl = document.getElementById('tenantsTable');
   tbl.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px">กำลังโหลดข้อมูล...</td></tr>';
   
   const r = await api('superadmin_listTenants');
-  if (!r.success) return tbl.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444">${r.message}</td></tr>`;
   
-  if (r.tenants.length === 0) { 
+  if (r.code === 'AUTH') {
+    alert('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
+    return logout();
+  }
+  
+  if (!r.success) {
+    return tbl.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:20px">${r.message || 'เกิดข้อผิดพลาด'}</td></tr>`;
+  }
+  
+  cachedTenants = r.tenants || [];
+  
+  if (cachedTenants.length === 0) { 
     tbl.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">ยังไม่มีโรงเรียนในระบบ</td></tr>'; 
+    document.getElementById('schoolCheckboxList').innerHTML = '<div style="color:#94a3b8;text-align:center;">ไม่มีโรงเรียนในระบบ</div>';
     return; 
   }
   
+  // Render Table
   tbl.innerHTML = `
     <thead>
       <tr>
         <th>School ID / ชื่อโรงเรียน</th>
-        <th>แอดมินโรงเรียน</th>
-        <th>Owner (อีเมล)</th>
+        <th>แอดมินโรงเรียน (Username)</th>
+        <th>Owner (อีเมล/เบอร์โทร)</th>
         <th>สถานะ / วันหมดอายุ</th>
         <th>เหลือ</th>
         <th style="text-align:center">จัดการระบบ</th>
       </tr>
     </thead>
     <tbody>
-      ${r.tenants.map(t => `
+      ${cachedTenants.map(t => `
         <tr>
           <td>
             <div style="font-weight:bold; color:#60a5fa; font-family:monospace; font-size:0.9rem;">${esc(t.schoolId)}</div>
@@ -140,8 +283,8 @@ async function loadTenants() {
           </td>
           <td>
             <div class="action-btns">
+              <button onclick="openEditTenantModal('${t.schoolId}')" class="warning" title="แก้ไขข้อมูลโรงเรียน/แอดมิน">✏️ แก้ไขข้อมูล</button>
               <button onclick="extendLicense('${t.schoolId}', '${esc(t.schoolName)}')" class="success" title="ต่ออายุ / ปลดระงับ">➕ ต่ออายุ</button>
-              <button onclick="resetAdminPassword('${t.schoolId}', '${t.adminUser || 'admin'}')" class="warning" title="รีเซ็ตรหัสแอดมิน">🔑 รีเซ็ตรหัส</button>
               <button onclick="toggleStatus('${t.schoolId}','${t.status}')" class="${t.status === 'suspended' ? 'neutral' : 'danger'}" title="${t.status === 'suspended' ? 'ปลดล็อค' : 'ระงับ'}">
                 ${t.status === 'suspended' ? '🔓 ปลดล็อค' : '🛑 ระงับ'}
               </button>
@@ -152,8 +295,132 @@ async function loadTenants() {
       `).join('')}
     </tbody>
   `;
+
+  // Render Checkboxes for Email
+  document.getElementById('schoolCheckboxList').innerHTML = cachedTenants.map(t => `
+    <label class="school-checkbox-label">
+      <input type="checkbox" class="school-checkbox" value="${esc(t.ownerEmail)}" data-school-id="${esc(t.schoolId)}">
+      ${esc(t.schoolName)} <span style="color:#64748b; font-size:.8rem;">(${esc(t.ownerEmail || 'ไม่มีอีเมล')})</span>
+    </label>
+  `).join('');
 }
 
+function toggleAllSchools(checked) {
+  document.querySelectorAll('.school-checkbox').forEach(cb => {
+    if (checked && !cb.value) return;
+    cb.checked = checked;
+  });
+}
+
+// --- Edit Tenant Functions ---
+function openEditTenantModal(schoolId) {
+  const t = cachedTenants.find(x => x.schoolId === schoolId);
+  if (!t) return;
+  
+  document.getElementById('editSchoolId').value = t.schoolId;
+  document.getElementById('editSchoolName').value = t.schoolName;
+  document.getElementById('editOwnerPhone').value = t.ownerPhone || '';
+  document.getElementById('editAdminUsername').value = t.adminUser || 'admin';
+  document.getElementById('editAdminPassword').value = '';
+  
+  document.getElementById('editTenantModal').classList.add('show');
+}
+
+function closeEditTenantModal() {
+  document.getElementById('editTenantModal').classList.remove('show');
+}
+
+async function saveTenantInfo() {
+  const schoolId = document.getElementById('editSchoolId').value;
+  const schoolName = document.getElementById('editSchoolName').value.trim();
+  const ownerPhone = document.getElementById('editOwnerPhone').value.trim();
+  const adminUsername = document.getElementById('editAdminUsername').value.trim().toLowerCase();
+  const adminPassword = document.getElementById('editAdminPassword').value;
+
+  if (!schoolName) return alert('กรุณากรอกชื่อโรงเรียน');
+  if (!adminUsername) return alert('กรุณากรอก Username แอดมิน');
+  if (adminPassword && adminPassword.length < 6) return alert('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร');
+
+  const btn = document.getElementById('saveTenantBtn');
+  btn.disabled = true; btn.innerHTML = '⏳ กำลังบันทึก & ส่งอีเมล...';
+
+  const r = await api('superadmin_updateTenantInfo', {
+    schoolId, schoolName, ownerPhone, adminUsername, adminPassword
+  });
+
+  btn.disabled = false; btn.innerHTML = '💾 บันทึก & ส่งอีเมล';
+
+  if (r.success) {
+    alert(r.message);
+    closeEditTenantModal();
+    loadTenants();
+  } else {
+    alert('❌ เกิดข้อผิดพลาด: ' + r.message);
+  }
+}
+
+// File Upload Handlers
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) { imageBase64 = null; document.getElementById('imageFileName').textContent = 'ยังไม่ได้เลือกไฟล์'; return; }
+  document.getElementById('imageFileName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (evt) => { imageBase64 = evt.target.result; };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('pdfUpload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) { pdfBase64 = null; document.getElementById('pdfFileName').textContent = 'ยังไม่ได้เลือกไฟล์'; return; }
+  document.getElementById('pdfFileName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = (evt) => { pdfBase64 = evt.target.result; };
+  reader.readAsDataURL(file);
+});
+
+async function sendEmail() {
+  const emails = Array.from(document.querySelectorAll('.school-checkbox:checked')).map(cb => cb.value).filter(Boolean);
+  const subject = document.getElementById('emailSubject').value.trim();
+  const message = document.getElementById('emailMessage').value.trim();
+
+  if (emails.length === 0) return alert('กรุณาเลือกโรงเรียนอย่างน้อย 1 โรงเรียน (โรงเรียนที่ไม่มีอีเมลจะถูกข้าม)');
+  if (!subject) return alert('กรุณากรอกหัวข้ออีเมล');
+  if (!message) return alert('กรุณากรอกข้อความ');
+
+  const btn = document.getElementById('sendEmailBtn');
+  btn.disabled = true; btn.innerHTML = '⏳ กำลังส่ง... (อาจใช้เวลาสักครู่)';
+
+  const pdfInput = document.getElementById('pdfUpload');
+  const pdfName = pdfInput.files.length > 0 ? pdfInput.files[0].name : 'document.pdf';
+
+  const r = await api('superadmin_sendEmail', {
+    emails: emails,
+    subject: subject,
+    message: message,
+    imageBase64: imageBase64,
+    pdfBase64: pdfBase64,
+    pdfName: pdfName
+  });
+
+  btn.disabled = false; btn.innerHTML = '🚀 ส่งอีเมล';
+  
+  if (r.success) {
+    alert(r.message);
+    document.getElementById('emailSubject').value = '';
+    document.getElementById('emailMessage').value = '';
+    document.getElementById('imageUpload').value = '';
+    document.getElementById('pdfUpload').value = '';
+    document.getElementById('imageFileName').textContent = 'ยังไม่ได้เลือกไฟล์';
+    document.getElementById('pdfFileName').textContent = 'ยังไม่ได้เลือกไฟล์';
+    imageBase64 = null;
+    pdfBase64 = null;
+    document.querySelectorAll('.school-checkbox').forEach(cb => cb.checked = false);
+  } else {
+    alert('❌ เกิดข้อผิดพลาด: ' + r.message);
+  }
+}
+
+// --- Original Functions ---
 async function extendLicense(schoolId, schoolName) {
   const daysInput = prompt(`➕ ต่ออายุโรงเรียน: ${schoolName}\n\nกรอกจำนวนวันที่ต้องการต่อ (เช่น 30, 90, 180, 365):`, '30'); 
   if (!daysInput || isNaN(daysInput) || Number(daysInput) <= 0) return;
@@ -186,24 +453,8 @@ async function toggleStatus(schoolId, current) {
   if (r.success) loadTenants();
 }
 
-async function resetAdminPassword(schoolId, adminUser) {
-  const newPw = prompt(`🔑 รีเซ็ตรหัสผ่านสำหรับแอดมินโรงเรียน ${schoolId}\n(Username: ${adminUser})\n\nกรอกรหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร):`, '123456789');
-  if (!newPw) return;
-  if (newPw.length < 6) return alert('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
-  
-  const btn = event.target;
-  const origText = btn.innerHTML;
-  btn.disabled = true; btn.innerHTML = '...';
-  
-  const r = await api('superadmin_resetAdminPassword', { schoolId, newPassword: newPw });
-  btn.disabled = false; btn.innerHTML = origText;
-  
-  alert(r.message); 
-  if (r.success) loadTenants();
-}
-
 async function deleteTenant(schoolId, schoolName) {
-  const confirm1 = confirm(`⚠️ คำเตือนอันตราย!\nคุณต้องการลบโรงเรียน "${schoolName}" ใช่หรือไม่?\n\nข้อมูลทั้งหมด (ฐานข้อมูลครู, ประวัติลงเวลา, รูปภาพ) จะถูกย้ายลงถังขยะ Drive`);
+  const confirm1 = confirm(`⚠️ คำเตือนอันตราย!\nคุณต้องการลบโรงเรียน "${schoolName}" ใช่หรือไม่?\n\nข้อมูลทั้งหมดจะถูกย้ายลงถังขยะ Drive`);
   if (!confirm1) return;
   
   const confirm2 = prompt(`พิมพ์คำว่า "DELETE" (ตัวพิมพ์ใหญ่) เพื่อยืนยันการลบโรงเรียน ${schoolId}`);
