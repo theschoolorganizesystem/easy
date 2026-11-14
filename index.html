@@ -442,8 +442,6 @@ tr.row-latest-day:hover td { background: color-mix(in srgb, var(--primary) 14%, 
           <div style="font-size:.75rem;color:var(--text-muted);margin-top:6px;font-weight:500;">💡 ระบบสร้าง Sheet <b>attendance{ปี}</b> อัตโนมัติเมื่อมีการลงเวลา</div>
         </div>
 
-        <button type="button" class="btn-sm btn-warning" id="btnMigrateSheets" style="width:100%;margin-bottom:16px;">🔧 Migrate ชีทเก่า (attendance1/2-YYYY → attendanceYYYY)</button>
-
         <button type="button" class="submit-btn" id="saveSettingsBtn">💾 บันทึกการตั้งค่าทั้งหมด</button>
       </div>
     </div>
@@ -2178,7 +2176,6 @@ document.getElementById('btnUseCurrentGps').addEventListener('click', async () =
   finally { btn.disabled = false; btn.innerHTML = orig; }
 });
 
-// ✅ แก้ไข: ตรวจสอบว่าต้องกรอกพิกัดให้ครบก่อนบันทึก
 document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
   const latInput = document.getElementById('setOfficeLat').value.trim();
   const lngInput = document.getElementById('setOfficeLng').value.trim();
@@ -2238,22 +2235,6 @@ window.addEventListener('resize', () => {
   }, 200);
 });
 
-document.getElementById('btnMigrateSheets').addEventListener('click', async () => {
-  if (!confirm('Migrate ชีทเก่า attendance1/2-YYYY → attendanceYYYY และลบชีทเก่า?\n(ทำครั้งเดียว - ข้อมูลจะถูก merge เข้าชีทใหม่)')) return;
-  const btn = document.getElementById('btnMigrateSheets');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลัง migrate...';
-  const res = await api('admin_migrateSheets');
-  btn.disabled = false; btn.textContent = '🔧 Migrate ชีทเก่า (attendance1/2-YYYY → attendanceYYYY)';
-  if (res.success) {
-    toast('Migrate สำเร็จ');
-    console.log('[Migrate log]', res.log);
-    clearAllCaches();
-    loadDailyReport(true);
-    loadReports(true);
-  } else {
-    toast(res.message, 'error');
-  }
-});
 </script>
 </body>
 </html>
