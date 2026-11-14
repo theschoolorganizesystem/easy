@@ -1879,7 +1879,7 @@ function updateProfileUI() {
   if (isAdminRole()) {
     adminOpt.style.display = 'block';
     profPosSelect.value = 'แอดมิน';
-    profPosSelect.disabled = true; // ล็อคไม่ให้แอดมินเปลี่ยนตำแหน่งตัวเอง
+    profPosSelect.disabled = true; 
   } else {
     adminOpt.style.display = 'none';
     profPosSelect.disabled = false;
@@ -2119,7 +2119,6 @@ async function saveEditUser() {
   const targetUsername = document.getElementById('editTargetUsername').value;
   const newPosition = document.getElementById('editUserPosition').value;
 
-  // ✅ ถ้าเลือกตำแหน่ง ผอ. ให้หาคนเก่าที่เป็น ผอ. และเปลี่ยนเป็น ครู ก่อน
   if (newPosition === 'ผอ.') {
      const oldDirector = state.adminUsers.find(u => u.position === 'ผอ.' && u.username !== targetUsername && u.role !== 'admin');
      if (oldDirector) {
@@ -2179,14 +2178,26 @@ document.getElementById('btnUseCurrentGps').addEventListener('click', async () =
   finally { btn.disabled = false; btn.innerHTML = orig; }
 });
 
+// ✅ แก้ไข: ตรวจสอบว่าต้องกรอกพิกัดให้ครบก่อนบันทึก
 document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+  const latInput = document.getElementById('setOfficeLat').value.trim();
+  const lngInput = document.getElementById('setOfficeLng').value.trim();
+  const radiusInput = document.getElementById('setRadius').value.trim();
+  
+  if (!latInput || !lngInput) {
+     return toast('กรุณาระบุพิกัดละติจูดและลองจิจูดให้ครบถ้วน', 'error');
+  }
+  if (!radiusInput) {
+     return toast('กรุณาระบุรัศมี (เมตร)', 'error');
+  }
+
   const btn = document.getElementById('saveSettingsBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
   const payload = {
     officeName: document.getElementById('setOfficeName').value.trim(),
-    officeLat: Number(document.getElementById('setOfficeLat').value),
-    officeLng: Number(document.getElementById('setOfficeLng').value),
-    radius: Number(document.getElementById('setRadius').value),
+    officeLat: Number(latInput),
+    officeLng: Number(lngInput),
+    radius: Number(radiusInput),
     strictRegistration: document.getElementById('setStrictReg').checked,
     academicYear: document.getElementById('setAcademicYear').value.trim(),
     term1Start: datePickers['setT1Start'] ? datePickers['setT1Start'].input.value : document.getElementById('setT1Start').value,
